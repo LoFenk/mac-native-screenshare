@@ -1,0 +1,31 @@
+DISPLAY SIZE AND SHARPNESS
+
+Too large on the laptop as well?
+  Use Omarchy's normal display settings. This affects local and remote use.
+  Stop sharing first: mac-native-screenshare stop
+  Show the current scale: omarchy hyprland monitor scaling
+  Smaller interface: omarchy hyprland monitor scaling 1
+  Larger interface:  omarchy hyprland monitor scaling 2
+  Then check: hyprctl reload && hyprctl configerrors
+  Use scale 1 or 2 with this preview. To undo, restore the scale you noted.
+  For resolution, inspect hyprctl monitors all and edit the matching monitor
+  rule in ~/.config/hypr/monitors.lua. Prefer the panel's native resolution
+  for sharpness; validate with the same reload/configerrors commands.
+
+Comfortable on the laptop, but too large on the Mac?
+  Try a temporary desktop from this menu. More desktop pixels can give you
+  more workspace and smaller text when the Mac fits the image to its window.
+  These virtual desktops use scale 1. Choose an aspect ratio close to the
+  Mac's display; higher resolutions use more bandwidth and processing.
+  The laptop mirrors this same desktop while sharing is active. Stop sharing
+  to restore its normal layout. Choose option 1 to use the normal desktop
+  on future starts too. Temporary mode stays selected between sessions.
+
+Only want to change the view on the Mac?
+  Use Screen Sharing's View menu to turn scaling on or off. Viewer scaling
+  fits the existing image; it does not change Linux settings or add detail.
+  Fullscreen alone does not increase the remote desktop's resolution.
+
+Reading or hiding this guide changes nothing. A display choice asks for
+confirmation. If sharing is running, applying it restarts sharing and briefly
+disconnects the Mac. If sharing is stopped, it saves the choice for next start.

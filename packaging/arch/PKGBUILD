@@ -18,6 +18,7 @@ depends=(
 )
 makedepends=('meson>=1.12.0' 'ninja' 'pkgconf' 'libdrm')
 checkdepends=('lua')
+optdepends=('ufw: apply the optional scoped firewall rule' 'sudo: request administrator access for the confirmed firewall rule')
 # Keep normal Arch hardening; avoid a separate debug artifact and LTO in this preview.
 options=('!debug' '!lto')
 source=(
@@ -100,7 +101,7 @@ package() {
   local _runtime="$pkgdir/usr/lib/$pkgname"
   local _docs="$pkgdir/usr/share/doc/$pkgname"
   local _licenses="$pkgdir/usr/share/licenses/$pkgname"
-  for _file in probe.py mac-shortcuts.lua hyprland-hook.lua VERSION \
+  for _file in probe.py mac-shortcuts.lua hyprland-hook.lua VERSION display-guide.txt \
       mns_common.py mns_cli.py mns_session.py mns_desktop.py mns_relay.py mns_discovery.py \
       package-lifecycle.py; do
     install -Dm644 "$srcdir/integration/$_file" "$_runtime/$_file"

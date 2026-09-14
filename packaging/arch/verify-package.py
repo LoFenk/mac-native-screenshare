@@ -31,7 +31,7 @@ def verify_root(root):
     expected = [PREFIX / 'bin/wayvnc', PREFIX / 'bin/wayvncctl',
                 PREFIX / 'lib/libneatvnc.so.1', PREFIX / 'probe.py',
                 PREFIX / 'mac-shortcuts.lua', PREFIX / 'hyprland-hook.lua',
-                PREFIX / 'VERSION', DOCS / 'README.md', DOCS / 'USAGE.md', LAUNCHER, UNIT, *HOOKS,
+                PREFIX / 'VERSION', PREFIX / 'display-guide.txt', DOCS / 'README.md', DOCS / 'USAGE.md', LAUNCHER, UNIT, *HOOKS,
                 *[PREFIX / name for name in ('mns_common.py', 'mns_cli.py', 'mns_session.py', 'mns_desktop.py',
                                              'mns_relay.py', 'mns_discovery.py', 'package-lifecycle.py')],
                 DOCS / 'RELEASE_SCOPE.md', DOCS / 'sources.json',
@@ -81,6 +81,8 @@ def verify_root(root):
     run(str(server), '--version')
     run(str(control), '--help')
     run('/usr/bin/python3', str(root / PREFIX / 'mns_cli.py'), '--help')
+    assert 'DISPLAY SIZE AND SHARPNESS' in run('/usr/bin/python3', str(root / PREFIX / 'mns_cli.py'), 'display', '--guide')
+    assert '--apply' in run('/usr/bin/python3', str(root / PREFIX / 'mns_cli.py'), 'firewall', '--help')
     assert run('/usr/bin/python3', str(root / PREFIX / 'mns_cli.py'), '--version').strip() == (root / PREFIX / 'VERSION').read_text().strip()
     unit = (root / UNIT).read_text()
     for directive in ('PartOf=graphical-session.target', 'Requisite=graphical-session.target',

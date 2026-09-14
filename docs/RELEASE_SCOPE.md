@@ -13,7 +13,7 @@ This is an experimental developer preview. Setup, service enablement, reboot ord
 | Displays | One physical output, initially unmirrored, at scale 1 or 2 and position 0,0; optional single scale-1 virtual output for viewer sizing |
 | Users | One Mac controlling the host user's existing desktop; no separate remote login or independent multiuser desktop |
 
-Package revision 3 adds scale-2 setup, physical capture guards, and scale preservation through virtual staging, mirroring, and recovery. The regression tests simulate the compositor and execute generated monitor rules in Lua; real scale-2 Mac capture and pointer accuracy remain unverified.
+Package revision 3 adds scale-2 setup, physical capture guards, and scale preservation through virtual staging, mirroring, and recovery. The regression tests simulate the compositor and execute generated monitor rules in Lua; a successful Mac connection at scale 2 has since been reported after applying the scoped firewall rule; pointer accuracy and virtual-display acceptance remain pending.
 
 These are release targets, not claims that every version in a range has been tested. Package dependencies bound the Omarchy and Hyprland versions to the initial target families. New host versions, other Macs, and other layouts need explicit compatibility testing.
 
@@ -31,7 +31,7 @@ Initial use is confined to a deliberately selected trusted private LAN, with acc
 
 ## Package milestone
 
-The package owns a private software tree, documentation/licenses, one CLI launcher, a disabled user unit, and two pre-transaction cleanup hooks. It does not replace Arch's `wayvnc` or `neatvnc` or claim to provide their system libraries. Installing it does not modify Hyprland configuration, enable startup, create credentials, or open firewall ports. Explicit setup owns two marked user config blocks and private settings; removal preserves unrelated edits. Global Avahi enablement and administrator firewall rules remain separately managed. Real desktop and client lifecycle acceptance remains unfinished.
+The package owns a private software tree, documentation/licenses, one CLI launcher, a disabled user unit, and two pre-transaction cleanup hooks. It does not replace Arch's `wayvnc` or `neatvnc` or claim to provide their system libraries. Installing it does not modify Hyprland configuration, enable startup, create credentials, or open firewall ports. Explicit setup owns two marked user config blocks and private settings; removal preserves unrelated edits. Interactive setup can offer a scoped UFW rule with explicit confirmation and sudo authentication. Global Avahi enablement, UFW enablement, and removal of administrator-confirmed firewall rules remain separately managed. A terminal display menu offers temporary sizing and toggleable instructions; normal monitor changes remain Omarchy settings. Real desktop and client lifecycle acceptance remains unfinished.
 
 ## Release gates
 

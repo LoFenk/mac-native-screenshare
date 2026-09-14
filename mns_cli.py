@@ -112,6 +112,8 @@ def configure(paths, args):
     if old:
         write_json(paths.settings, config)
         print('Settings updated. Existing password and login-start preference retained; sharing is stopped.')
+        offer_firewall(config, prompt=not args.skip_firewall)
+        print('Run mac-native-screenshare display for display choices and instructions.')
         return
     if paths.ownership.exists() or paths.password.exists():
         raise Error('An incomplete setup exists. Run remove to recover its owned files, then retry.')
@@ -136,7 +138,9 @@ def configure(paths, args):
             (paths.config / name).unlink(missing_ok=True)
         raise
     print(f'Setup complete: {network["interface"]}, {network["subnet"]}, {output}, TCP {config["port"]}. Sharing is stopped.')
+    offer_firewall(config, prompt=not args.skip_firewall)
     print('Run mac-native-screenshare password to view the fresh credential, then start to share.')
+    print('Run mac-native-screenshare display for display choices and instructions.')
 
 
 def remove_configuration(paths):
@@ -207,10 +211,167 @@ def disable(paths, offline=False):
 
 
 def firewall_commands(config):
-    # Administrator action stays explicit; no privileged/global firewall edits.
+    # Only this selected interface, private subnet, host address, and TCP port.
     base = ['allow', 'in', 'on', config['interface'], 'proto', 'tcp', 'from', config['subnet'],
             'to', config['address'], 'port', str(config['port']), 'comment', NAME]
     return shlex.join(['sudo', 'ufw', *base]), shlex.join(['sudo', 'ufw', 'delete', *base])
+
+
+def offer_firewall(config, *, prompt=True):
+    config = dict(config, address=resolve_network(config))
+    allow, remove = firewall_commands(config)
+    print('Finder discovery can work while the firewall blocks screen sharing.')
+    print('Allow screen sharing from the selected LAN with:\n' + allow)
+    print('Remove that exact rule later with:\n' + remove)
+    if not prompt or not (sys.stdin.isatty() and sys.stdout.isatty()):
+        print('Firewall unchanged. Run mac-native-screenshare firewall --apply in a terminal to review and apply this rule.')
+        return
+    if not all(os.access(path, os.X_OK) for path in ('/usr/bin/sudo', '/usr/bin/ufw')):
+        print('sudo or UFW is unavailable. Firewall unchanged; configure access with your administrator.')
+        return
+    try:
+        answer = input('Apply the allow rule above now? sudo may ask for your login password. [y/N] ')
+    except (EOFError, KeyboardInterrupt):
+        answer = ''
+        print()
+    if answer.strip().lower() not in ('y', 'yes'):
+        print('Firewall unchanged. You can retry with mac-native-screenshare firewall --apply.')
+        return
+    # A network/address change while the prompt was open requires a fresh review.
+    resolve_network(config, config['address'])
+    try:
+        # Inherit the terminal for sudo. Never run the user configuration as root.
+        subprocess.run(['/usr/bin/sudo', '--', '/usr/bin/ufw', *shlex.split(allow)[2:]], check=True)
+    except (OSError, subprocess.SubprocessError, KeyboardInterrupt) as error:
+        raise Error('The firewall command did not complete successfully. Sharing settings were kept. '
+                    'Check sudo ufw status verbose, then retry mac-native-screenshare firewall --apply.') from error
+    print('UFW rule processed. Identical existing rules are reused. Sharing settings and startup preference are unchanged.')
+
+
+def start_sharing(paths):
+    session_environment(paths)
+    settings(paths)
+    password(paths)
+    verify_hooks(paths)
+    if systemctl('is-active', '--quiet', 'graphical-session.target', check=False).returncode:
+        raise Error('A systemd-managed graphical session is required.')
+    import_session()
+    systemctl('daemon-reload')
+    systemctl('reset-failed', UNIT, check=False)
+    systemctl('start', UNIT)
+    if not active() or not (paths.runtime / 'ready.json').is_file():
+        raise Error('Sharing did not become ready. Run status and journalctl --user -u ' + UNIT)
+
+
+def display_label(virtual):
+    return f'Temporary desktop {virtual[0]}x{virtual[1]} (scale 1)' if virtual else 'Normal laptop desktop'
+
+
+def display_guide():
+    return (ROOT / 'display-guide.txt').read_text()
+
+
+def change_display(paths, virtual):
+    # The menu itself holds no lock; start/stop remain available while reading help.
+    with lock(paths):
+        old = settings(paths)
+        updated = validate_settings(dict(old, virtual=virtual))
+        if old['virtual'] == virtual:
+            return 'That display mode is already selected.'
+        if not (sys.stdin.isatty() and sys.stdout.isatty()):
+            raise Error('Changing display mode requires an interactive terminal.')
+        session_environment(paths)
+        verify_hooks(paths)
+        password(paths)
+        was_active = active()
+        print('Selected: ' + display_label(virtual))
+        if virtual:
+            print('The laptop will mirror this desktop while sharing. Stop restores its normal layout.')
+        if was_active:
+            print('Sharing will restart. The Mac will disconnect briefly; reconnect after the change.')
+        else:
+            print('This takes effect next time you start sharing. The laptop stays as it is for now.')
+        try:
+            answer = input('Apply this display choice? [y/N] ')
+        except (EOFError, KeyboardInterrupt):
+            return 'Display settings unchanged.'
+        if answer.strip().lower() not in ('y', 'yes'):
+            return 'Display settings unchanged.'
+        if was_active:
+            systemctl('stop', UNIT)
+        stopped()
+        recover(paths)
+        Desktop(paths).physical(old['output'])
+        try:
+            write_json(paths.settings, updated)
+            if was_active:
+                start_sharing(paths)
+        except (Error, OSError, ValueError, subprocess.SubprocessError, KeyboardInterrupt) as error:
+            try:
+                if was_active:
+                    systemctl('stop', UNIT)
+                stopped()
+                recover(paths)
+                write_json(paths.settings, old)
+            except (Error, OSError, ValueError, subprocess.SubprocessError) as cleanup:
+                raise Error('Display change failed and cleanup needs attention. Run stop, recover, and status. '
+                            'The recovery journal and current settings have been retained: ' + str(cleanup)) from error
+            raise Error('Display change failed; the previous choice was restored and sharing is stopped. '
+                        'Run doctor before starting again: ' + str(error)) from error
+        return ('Sharing restarted. Reconnect from the Mac.' if was_active else
+                'Display choice saved. Run mac-native-screenshare start when ready.')
+
+
+def display_menu(paths):
+    if not (sys.stdin.isatty() and sys.stdout.isatty()):
+        raise Error('The display menu needs a terminal. Use display --guide to print the instructions.')
+    show_guide = False
+    message = ''
+    presets = {'1': None, '2': [1920, 1200], '3': [2560, 1600], '4': [3840, 2160]}
+    while True:
+        config = settings(paths) if paths.settings.exists() else None
+        if os.environ.get('TERM', '') not in ('', 'dumb'):
+            print('\033[2J\033[H', end='')
+        print('Mac Native Screenshare — Display\n')
+        print('Selected: ' + (display_label(config['virtual']) if config else 'Run mac-native-screenshare setup first.'))
+        print('Temporary mode mirrors onto the laptop while sharing; stop restores its normal layout.\n')
+        if show_guide:
+            print(display_guide())
+        print('1  Normal laptop desktop\n2  Temporary 1920x1200\n3  Temporary 2560x1600\n'
+              '4  Temporary 3840x2160\n5  Custom temporary resolution')
+        print(('h  Hide' if show_guide else 'h  Show') + ' display instructions\nq  Close menu')
+        if message:
+            print('\n' + message)
+        try:
+            choice = input('\nChoose: ').strip().lower()
+            if choice in ('q', ''):
+                return
+            if choice in ('h', '?'):
+                show_guide = not show_guide
+                message = ''
+                continue
+            if choice not in (*presets, '5'):
+                message = 'Choose 1–5, h, or q.'
+                continue
+            if not config:
+                message = 'Run mac-native-screenshare setup first; the guide is available with h.'
+                continue
+            virtual = presets.get(choice)
+            if choice == '5':
+                raw = input('Temporary resolution WIDTHxHEIGHT (blank cancels): ').strip()
+                if not raw:
+                    continue
+                match = re.fullmatch(r'(\d+)x(\d+)', raw)
+                if not match:
+                    message = 'Use WIDTHxHEIGHT, for example 2560x1600.'
+                    continue
+                virtual = list(map(int, match.groups()))
+            message = change_display(paths, virtual)
+        except (EOFError, KeyboardInterrupt):
+            print('\nDisplay menu closed. Run status to check sharing.')
+            return
+        except (Error, OSError, ValueError, subprocess.SubprocessError) as error:
+            message = str(error)
 
 
 def main():
@@ -226,17 +387,24 @@ def main():
     display.add_argument('--virtual', metavar='WIDTHxHEIGHT')
     display.add_argument('--physical', action='store_true')
     setup.add_argument('--accept-unencrypted', action='store_true')
+    setup.add_argument('--skip-firewall', action='store_true', help='Print firewall guidance without prompting to apply a rule')
     for command, help_text in (
         ('networks', 'List eligible connected private networks'), ('displays', 'List displays'),
         ('start', 'Start sharing in this desktop session'), ('stop', 'Stop and restore the desktop'),
         ('enable', 'Enable sharing at future graphical logins'), ('disable', 'Stop and disable login startup'),
         ('password', 'Show the password in this terminal'), ('reset-password', 'Rotate the password while stopped'),
-        ('recover', 'Retry restoration after an interrupted session'), ('doctor', 'Check setup without starting sharing'),
-        ('firewall', 'Print optional scoped UFW allow and removal commands')):
+        ('recover', 'Retry restoration after an interrupted session'), ('doctor', 'Check setup without starting sharing')):
         subs.add_parser(command, help=help_text)
+    subs.add_parser('firewall', help='Show the scoped UFW rule; optionally confirm and apply it').add_argument(
+        '--apply', action='store_true', help='Ask for confirmation in a terminal, then apply the rule with sudo')
+    subs.add_parser('display', help='Choose normal or temporary desktop sizing and toggle its guide').add_argument(
+        '--guide', action='store_true', help='Print display instructions without changing settings')
     subs.add_parser('status', help='Report state without credentials').add_argument('--json', action='store_true')
     subs.add_parser('remove', help='Stop, disable, and remove owned user configuration').add_argument('--offline', action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.command == 'display' and args.guide:
+        print(display_guide())
+        return
     paths = Paths()
     temporary = None
     if args.command == 'remove' and args.offline and not paths.runtime.parent.exists():
@@ -254,6 +422,9 @@ def main():
         state = status(paths)
         print(json.dumps(state, indent=2) if args.json else '\n'.join(f'{k}: {v}' for k, v in state.items()))
         return
+    if args.command == 'display':
+        display_menu(paths)
+        return
     if args.command == 'recover':
         # ExecStopPost must not contend with the CLI waiting in systemctl stop.
         with lock(paths, 'session.lock'):
@@ -264,18 +435,7 @@ def main():
         if args.command == 'setup':
             configure(paths, args)
         elif args.command == 'start':
-            session_environment(paths)
-            settings(paths)
-            password(paths)
-            verify_hooks(paths)
-            if systemctl('is-active', '--quiet', 'graphical-session.target', check=False).returncode:
-                raise Error('A systemd-managed graphical session is required.')
-            import_session()
-            systemctl('daemon-reload')
-            systemctl('reset-failed', UNIT, check=False)
-            systemctl('start', UNIT)
-            if not active() or not (paths.runtime / 'ready.json').is_file():
-                raise Error('Sharing did not become ready. Run status and journalctl --user -u ' + UNIT)
+            start_sharing(paths)
             print('Sharing started. Use Finder → Network → Share Screen, or the address shown by status.')
         elif args.command == 'enable':
             settings(paths)
@@ -314,12 +474,12 @@ def main():
                     pass
             run('systemctl', 'is-active', '--quiet', 'avahi-daemon.service')
             print('Setup, credential permissions, hooks, network, desktop, and Avahi checks passed. Real Mac connectivity is a separate check.')
+            print('If Finder lists this host but cannot connect, review access with mac-native-screenshare firewall --apply.')
         elif args.command == 'firewall':
             config = settings(paths)
-            config['address'] = resolve_network(config)
-            allow, remove = firewall_commands(config)
-            print('If UFW blocks this connection, an administrator can use:\n' + allow + '\nRemove that exact rule with:\n' + remove)
-            print('The add-on does not change firewall rules. Existing mDNS access must also be available.')
+            if args.apply and not (sys.stdin.isatty() and sys.stdout.isatty()):
+                raise Error('firewall --apply requires an interactive terminal for confirmation. Use firewall to print the commands.')
+            offer_firewall(config, prompt=args.apply)
 
 
 if __name__ == '__main__':

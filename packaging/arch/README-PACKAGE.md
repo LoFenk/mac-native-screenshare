@@ -1,8 +1,8 @@
 # Mac Native Screenshare developer package
 
-Version 0.1.0alpha2-3 is an experimental add-on for x86-64 Omarchy 4.0 / Hyprland 0.56. Setup and service lifecycle are implemented; real second-host/Mac acceptance remains pending.
+Version 0.1.0alpha2-4 is an experimental add-on for x86-64 Omarchy 4.0 / Hyprland 0.56. Setup and service lifecycle are implemented. A second-host Mac connection at scale 2 has been reported; full acceptance remains pending.
 
-Revision 3 accepts physical monitor scale 1 or 2 and preserves it through virtual-display setup and recovery. Optional virtual outputs remain at scale 1. Keep your existing monitor scale and rerun `setup` if the previous revision rejected it.
+Revision 4 adds a terminal display menu and a guide that can be shown/hidden, plus confirmation before applying a scoped UFW rule during setup. Run `mac-native-screenshare display` to choose normal or temporary desktop sizing, or `display --guide` to read the instructions. Physical scale 1 or 2 remains supported; optional virtual outputs use scale 1.
 
 The package contains private modified WayVNC/NeatVNC components, a `mac-native-screenshare` command, a disabled user unit, and scoped cleanup hooks for upgrade/removal. It coexists with stock WayVNC/NeatVNC. Installing it does not start sharing, enable startup, create credentials, change desktop configuration, or alter firewall rules.
 
@@ -11,15 +11,15 @@ The package contains private modified WayVNC/NeatVNC components, a `mac-native-s
 On a supported host with the declared dependencies available:
 
 ```bash
-pacman -Qip ./mac-native-screenshare-0.1.0alpha2-3-x86_64.pkg.tar.zst
-sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-3-x86_64.pkg.tar.zst
+pacman -Qip ./mac-native-screenshare-0.1.0alpha2-4-x86_64.pkg.tar.zst
+sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-4-x86_64.pkg.tar.zst
 mac-native-screenshare setup
 mac-native-screenshare password
 mac-native-screenshare start
 mac-native-screenshare status
 ```
 
-Run the add-on commands as the logged-in desktop user, without sudo. Setup requires an explicitly selected trusted private LAN and acknowledgement that native VNC desktop/input/clipboard transport is unencrypted. Avahi must already be active, and firewall/mDNS access is separately managed. Do not expose this preview to the internet.
+Run the add-on commands as the logged-in desktop user, without sudo. Setup requires an explicitly selected trusted private LAN and acknowledgement that native VNC desktop/input/clipboard transport is unencrypted. Avahi must already be active. Interactive setup offers the scoped UFW rule after showing it and receiving confirmation; sudo may ask for your login password. `firewall --apply` repeats that prompt later. `--skip-firewall` or noninteractive setup prints guidance only. Confirmed firewall rules remain administrator-managed, and mDNS access must be available. Do not expose this preview to the internet.
 
 Read **USAGE.md** before configuration. It covers startup, larger virtual displays, recovery, password rotation, firewall guidance, upgrades, and removal. It also explains why the original lab hook must be retired before adopting this package on the development host. The package does not migrate that working lab automatically.
 

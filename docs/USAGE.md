@@ -1,6 +1,6 @@
 # Using the 0.1.0 alpha 2 developer preview
 
-This package now implements setup and service lifecycle. It still needs the second-host/Mac acceptance in roadmap step 6. The lifecycle tests use temporary user files, simulated desktop/network services, and a real WayVNC server detached from any desktop. They do not establish that this packaged deployment works across a real reboot or with a real Mac.
+This package implements setup and service lifecycle. The user reported a successful Mac connection to a second Omarchy host at physical scale 2 after applying the scoped firewall rule. The remaining acceptance checks in roadmap step 6 are still pending. The lifecycle tests use temporary user files, simulated desktop/network services, and a real WayVNC server detached from any desktop. They do not establish real reboot behavior or complete Mac/display acceptance.
 
 ## Set up
 
@@ -23,9 +23,19 @@ mac-native-screenshare setup --interface enp1s0 --output eDP-1 --accept-unencryp
 
 This preview requires one unrotated, unmirrored physical output at scale 1 or 2 and position 0,0, the standard Omarchy Lua bootstrap/default loader, a regular desktop account with UID at least 1000, and a systemd-managed graphical session. It uses fixed `~/.config/hypr` and `~/.config/mac-native-screenshare` locations so package removal can find configured accounts. Custom XDG configuration locations are outside this preview. It refuses the old prototype keyboard hook; retire the lab installation deliberately before switching the development host to this package. Concurrent VNC desktop sessions are outside scope.
 
-Package revision `0.1.0alpha2-3` adds physical display scale 2. Keep your existing monitor scale: physical capture does not change it. The optional virtual output remains at scale 1 with the requested pixel dimensions; its mirroring rules preserve the physical panel's scale, including during recovery. Fractional scales remain outside this preview. Real scale-2 Mac capture and pointer accuracy still need acceptance testing.
+Package revision `0.1.0alpha2-3` adds physical display scale 2. Keep your existing monitor scale: physical capture does not change it. The optional virtual output remains at scale 1 with the requested pixel dimensions; its mirroring rules preserve the physical panel's scale, including during recovery. Fractional scales remain outside this preview. A real scale-2 Mac connection has been reported; pointer accuracy, clipboard, shortcuts, and virtual-display lifecycle still need acceptance testing.
 
-Avahi must already be running. Setup reports if `avahi-daemon.service` needs an administrator to enable it. The package does not change global service settings or firewall rules. If UFW blocks incoming VNC, `mac-native-screenshare firewall` prints an optional allow rule scoped to the chosen interface, subnet, current host address, and port, plus its exact deletion command. An administrator manages that rule separately. Existing local mDNS access must also be available. A changed DHCP address can require updating that administrator-owned firewall rule.
+Avahi must already be running. Setup reports if `avahi-daemon.service` needs an administrator to enable it. Installation leaves firewall rules alone. After saving the sharing configuration, interactive setup shows the exact UFW allow rule for the selected interface, private subnet, current host address, and port, then asks whether to apply it. The default is no. If you confirm, only UFW runs through `sudo`; it can ask for your login password. Existing identical rules are reused. UFW's enabled state and other rules are unchanged.
+
+To review and apply the rule later, including while sharing is running:
+
+```bash
+mac-native-screenshare firewall --apply
+```
+
+`firewall` without `--apply` only prints the allow and deletion commands. `setup --skip-firewall` and noninteractive setup print guidance without prompting or elevating privileges. Explicit `firewall --apply` requires a terminal. Cancelling or failing sudo keeps the completed sharing settings and credentials so you can retry. A network/address change during the confirmation requires a fresh review. If UFW or sudo is unavailable, configure access with your administrator.
+
+The confirmed rule remains administrator-managed: changing the selected address, network, or port can require a new rule and removal of the old one. The printed deletion command reverses that exact rule. Uninstall does not delete administrator firewall rules. Existing mDNS access must also be available. Finder can discover the host even when its VNC port is blocked; `doctor` now points to this firewall command when local checks pass but the Mac cannot connect.
 
 ## Connect and control
 
@@ -38,6 +48,9 @@ On the Mac, use Finder → Network → the configured desktop name → Share Scr
 | `enable` | Start at future graphical logins on the selected network; does not start now |
 | `disable` | Stop now and remove login startup |
 | `status [--json]` | Report configuration, service state, endpoint, and pending recovery without credentials |
+| `display` | Open the display menu; press `h` to show/hide instructions and choose normal or temporary desktop sizing |
+| `display --guide` | Print the same instructions without changing settings; available before setup |
+| `firewall [--apply]` | Print the scoped rule, or ask for confirmation before applying it through sudo |
 | `doctor` | Check configuration, credential permissions, network, port when stopped, display, hooks, and Avahi |
 | `reset-password` | Generate a new password while stopped; use `password` to view it |
 | `recover` | Retry journaled cleanup after an interrupted session; refuses while the supervisor owns the session lock |
@@ -45,13 +58,29 @@ On the Mac, use Finder → Network → the configured desktop name → Share Scr
 
 For logs, use `journalctl --user -u mac-native-screenshare.service`. Do not publish credential files or the runtime VNC configuration.
 
+## Display menu and instructions
+
+```bash
+mac-native-screenshare display
+```
+
+Press **h** to show or hide the instructions. They explain Mac viewer zoom, normal Omarchy monitor scaling/resolution, and temporary virtual desktops. Reading the guide changes nothing and does not block other start/stop commands. **q** closes the menu.
+
+Choose **1** for the normal laptop desktop; **2–4** for temporary 1920×1200, 2560×1600, or 3840×2160 desktops; or **5** for a custom size. The selected mode is shown at the top. A change requires confirmation. If sharing is active, the app stops it, saves the choice, and starts it again; the Mac briefly disconnects and may need reconnecting. If sharing is stopped, only the preference is saved for next start. Credentials, network selection, firewall rules, and login startup are preserved.
+
+Temporary desktops use scale 1. The laptop mirrors that same desktop while sharing is active; stopping restores its normal layout. The temporary preference remains selected for future starts until you choose **1**. The menu does not edit normal Omarchy monitor settings. If restart fails and cleanup succeeds, it restores the previous selection and leaves sharing stopped. If cleanup fails, it retains the recovery state and reports the recovery commands.
+
+For the instructions alone, including before initial setup, run `mac-native-screenshare display --guide`. The packaged guide is also readable at `/usr/lib/mac-native-screenshare/display-guide.txt`.
+
+If text is also too large locally, follow the guide's normal Omarchy scaling instructions with sharing stopped. If only the Mac view needs adjustment, first consider its View → scaling controls; these fit the existing image without changing Linux resolution. Temporary sizing provides another desktop size when that is useful. More pixels can provide more workspace when fitted to the Mac, but do not guarantee sharper text; scaling, aspect ratio, and client quality settings also matter.
+
 ## Virtual sizing and keyboard behavior
 
-Stop sharing before updating its settings. For a larger display:
+The original explicit commands remain available. Stop sharing before using setup to change its settings:
 
 ```bash
 mac-native-screenshare stop
-mac-native-screenshare setup --virtual 1920x1200
+mac-native-screenshare setup --virtual 1920x1200 --skip-firewall
 mac-native-screenshare start
 ```
 

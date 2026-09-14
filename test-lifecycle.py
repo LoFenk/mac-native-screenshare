@@ -2,6 +2,7 @@
 import argparse
 import asyncio
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -38,14 +39,16 @@ class Workspace(unittest.TestCase):
         self.paths.hypr.write_text(ORIGINAL)
         self.env = {'HYPRLAND_INSTANCE_SIGNATURE': 'test-instance', 'WAYLAND_DISPLAY': 'wayland-test'}
 
-    def configure(self, **options):
+    def configure(self, interactive=False, **options):
         args = argparse.Namespace(interface='eth0', output='eDP-1', port=None, virtual=None,
-                                  physical=False, name=None, accept_unencrypted=True)
+                                  physical=False, name=None, accept_unencrypted=True, skip_firewall=False)
         vars(args).update(options)
         with patch.object(cli, 'stopped'), patch.object(cli, 'session_environment'), \
              patch.object(cli, 'networks', return_value=[{k: CONFIG[k] for k in ('interface', 'connection', 'address', 'subnet')}]), \
              patch.object(cli.Desktop, 'reload'), patch.object(cli.Desktop, 'query', return_value=[MONITOR]), \
              patch.object(cli.Desktop, 'physical', return_value=MONITOR), \
+             patch.object(cli, 'resolve_network', return_value=CONFIG['address']), \
+             patch.object(cli.sys.stdin, 'isatty', return_value=interactive), \
              patch.object(cli, 'reserve'), patch.object(cli, 'run', return_value=subprocess.CompletedProcess([], 0, '', '')):
             cli.configure(self.paths, args)
 
@@ -118,14 +121,16 @@ class ConfigurationTests(Workspace):
             calls += 1
             if calls == 2:
                 raise common.Error('Simulated invalid generated hook')
-        args = argparse.Namespace(interface='eth0', output='eDP-1', port=None, virtual=None, physical=False, name=None, accept_unencrypted=True)
+        args = argparse.Namespace(interface='eth0', output='eDP-1', port=None, virtual=None, physical=False, name=None, accept_unencrypted=True, skip_firewall=False)
         with patch.object(cli, 'stopped'), patch.object(cli, 'session_environment'), \
              patch.object(cli, 'networks', return_value=[{k: CONFIG[k] for k in ('interface', 'connection', 'address', 'subnet')}]), \
              patch.object(cli.Desktop, 'reload', reload), patch.object(cli.Desktop, 'query', return_value=[MONITOR]), \
              patch.object(cli.Desktop, 'physical', return_value=MONITOR), patch.object(cli, 'reserve'), \
+             patch.object(cli, 'offer_firewall') as firewall, \
              patch.object(cli, 'run', return_value=subprocess.CompletedProcess([], 0, '', '')):
             with self.assertRaises(common.Error):
                 cli.configure(self.paths, args)
+        firewall.assert_not_called()
         self.assertEqual(self.paths.hypr.read_text(), ORIGINAL)
         self.assertFalse(self.paths.settings.exists())
         self.assertFalse(self.paths.password.exists())
@@ -215,6 +220,258 @@ class NetworkTests(unittest.TestCase):
 def ipaddress(value):
     import ipaddress as module
     return module.IPv4Interface(value)
+
+
+class FirewallTests(Workspace):
+    def setUp(self):
+        super().setUp()
+        self.output = io.StringIO()
+        self.enterContext(patch.object(cli.sys, 'stdout', self.output))
+        self.stdin_tty = self.enterContext(patch.object(cli.sys.stdin, 'isatty', return_value=True))
+        self.stdout_tty = self.enterContext(patch.object(self.output, 'isatty', return_value=True))
+        self.resolve = self.enterContext(patch.object(cli, 'resolve_network', return_value=CONFIG['address']))
+        self.available = self.enterContext(patch.object(cli.os, 'access', return_value=True))
+        self.confirm = self.enterContext(patch('builtins.input', return_value='no'))
+        self.execute = self.enterContext(patch.object(cli.subprocess, 'run'))
+
+    def test_new_and_repeated_setup_prompt_after_saving_and_keep_credentials(self):
+        def confirm(question):
+            desktop.verify_hooks(self.paths)
+            self.assertEqual(common.settings(self.paths)['interface'], 'eth0')
+            common.password(self.paths)
+            self.assertIn('[y/N]', question)
+            self.execute.assert_not_called()
+            return 'no'
+        self.confirm.side_effect = confirm
+        self.configure(interactive=True)
+        secret = common.password(self.paths)
+        self.configure(interactive=True, port=5902)
+        self.assertEqual(self.confirm.call_count, 2)
+        self.assertEqual(common.password(self.paths), secret)
+        self.assertEqual(common.settings(self.paths)['port'], 5902)
+        self.execute.assert_not_called()
+
+    def test_approval_previews_exact_scope_before_only_ufw_is_elevated(self):
+        allow, remove = cli.firewall_commands(CONFIG)
+        def confirm(question):
+            self.assertIn(allow, self.output.getvalue())
+            self.assertIn(remove, self.output.getvalue())
+            self.execute.assert_not_called()
+            return 'YES'
+        self.confirm.side_effect = confirm
+        cli.offer_firewall(CONFIG)
+        self.execute.assert_called_once_with([
+            '/usr/bin/sudo', '--', '/usr/bin/ufw', 'allow', 'in', 'on', 'eth0',
+            'proto', 'tcp', 'from', '192.168.50.0/24', 'to', '192.168.50.10',
+            'port', '5900', 'comment', 'mac-native-screenshare'], check=True)
+        self.assertEqual(self.resolve.call_count, 2)
+
+    def test_empty_no_invalid_eof_and_interrupt_never_elevate(self):
+        for answer in ('', 'n', 'no', 'sure', EOFError(), KeyboardInterrupt()):
+            with self.subTest(answer=type(answer).__name__ if isinstance(answer, BaseException) else answer):
+                self.confirm.side_effect = answer if isinstance(answer, BaseException) else None
+                self.confirm.return_value = answer
+                cli.offer_firewall(CONFIG)
+                self.execute.assert_not_called()
+
+    def test_noninteractive_or_explicit_skip_never_prompts_or_elevates(self):
+        for stdin, stdout, skip in ((False, True, False), (True, False, False), (True, True, True)):
+            with self.subTest(stdin=stdin, stdout=stdout, skip=skip):
+                self.stdin_tty.return_value = stdin
+                self.stdout_tty.return_value = stdout
+                cli.offer_firewall(CONFIG, prompt=not skip)
+                self.confirm.assert_not_called()
+                self.execute.assert_not_called()
+        self.configure(interactive=True, skip_firewall=True)
+        self.confirm.assert_not_called()
+        self.execute.assert_not_called()
+
+    def test_missing_sudo_or_ufw_leaves_manual_guidance(self):
+        self.available.return_value = False
+        cli.offer_firewall(CONFIG)
+        self.confirm.assert_not_called()
+        self.execute.assert_not_called()
+        self.assertIn('sudo or UFW is unavailable', self.output.getvalue())
+
+    def test_failed_or_cancelled_sudo_keeps_completed_setup_for_retry(self):
+        self.confirm.return_value = 'yes'
+        for failure in (subprocess.CalledProcessError(1, ['sudo']), OSError('unavailable'), KeyboardInterrupt()):
+            with self.subTest(failure=type(failure).__name__):
+                self.execute.side_effect = failure
+                with self.assertRaisesRegex(common.Error, 'Sharing settings were kept'):
+                    self.configure(interactive=True)
+                desktop.verify_hooks(self.paths)
+                self.assertTrue(common.password(self.paths))
+                self.assertEqual(common.settings(self.paths)['interface'], 'eth0')
+
+    def test_network_change_after_confirmation_never_applies_stale_rule(self):
+        self.confirm.return_value = 'yes'
+        self.resolve.side_effect = [CONFIG['address'], common.Error('The selected host address changed')]
+        with self.assertRaisesRegex(common.Error, 'address changed'):
+            cli.offer_firewall(CONFIG)
+        self.execute.assert_not_called()
+
+    def test_rule_uses_current_address_without_rewriting_saved_settings(self):
+        self.confirm.return_value = 'y'
+        self.resolve.return_value = '192.168.50.99'
+        config = dict(CONFIG)
+        cli.offer_firewall(config)
+        argv = self.execute.call_args.args[0]
+        self.assertEqual(argv[argv.index('to') + 1], '192.168.50.99')
+        self.assertEqual(config, CONFIG)
+
+    def test_firewall_cli_is_read_only_unless_apply_is_explicit_and_interactive(self):
+        common.write_json(self.paths.settings, CONFIG)
+        with patch.object(cli, 'Paths', return_value=self.paths), \
+             patch.object(cli.sys, 'argv', ['mac-native-screenshare', 'firewall']):
+            cli.main()
+        self.confirm.assert_not_called()
+        self.execute.assert_not_called()
+        self.stdin_tty.return_value = False
+        with patch.object(cli, 'Paths', return_value=self.paths), \
+             patch.object(cli.sys, 'argv', ['mac-native-screenshare', 'firewall', '--apply']):
+            with self.assertRaisesRegex(common.Error, 'interactive terminal'):
+                cli.main()
+        self.execute.assert_not_called()
+        self.stdin_tty.return_value = True
+        self.confirm.return_value = 'yes'
+        with patch.object(cli, 'Paths', return_value=self.paths), \
+             patch.object(cli.sys, 'argv', ['mac-native-screenshare', 'firewall', '--apply']):
+            cli.main()
+        self.execute.assert_called_once()
+
+
+class DisplayMenuTests(Workspace):
+    def setUp(self):
+        super().setUp()
+        self.configure(skip_firewall=True)
+        self.output = io.StringIO()
+        self.enterContext(patch.object(cli.sys, 'stdout', self.output))
+        self.enterContext(patch.object(cli.sys.stdin, 'isatty', return_value=True))
+        self.enterContext(patch.object(self.output, 'isatty', return_value=True))
+        self.confirm = self.enterContext(patch('builtins.input', return_value='yes'))
+        self.enterContext(patch.object(cli, 'session_environment'))
+        self.active = self.enterContext(patch.object(cli, 'active', return_value=False))
+        self.enterContext(patch.object(cli, 'stopped'))
+        self.control = self.enterContext(patch.object(cli, 'systemctl'))
+        self.recover = self.enterContext(patch.object(cli, 'recover'))
+        self.physical = self.enterContext(patch.object(cli.Desktop, 'physical', return_value=MONITOR))
+        self.start = self.enterContext(patch.object(cli, 'start_sharing'))
+        self.original = common.settings(self.paths)
+        self.secret = common.password(self.paths)
+        self.hypr = self.paths.hypr.read_bytes()
+
+    def assert_preserved(self):
+        current = common.settings(self.paths)
+        self.assertEqual({k: v for k, v in current.items() if k != 'virtual'},
+                         {k: v for k, v in self.original.items() if k != 'virtual'})
+        self.assertEqual(common.password(self.paths), self.secret)
+        self.assertEqual(self.paths.hypr.read_bytes(), self.hypr)
+        self.assertFalse(any(call.args[0] in ('enable', 'disable') for call in self.control.call_args_list))
+
+    def test_stopped_toggle_saves_only_display_choice_and_preserves_user_files(self):
+        result = cli.change_display(self.paths, [2560, 1600])
+        self.assertIn('saved', result)
+        self.assertEqual(common.settings(self.paths)['virtual'], [2560, 1600])
+        cli.change_display(self.paths, None)
+        self.assertEqual(common.settings(self.paths), self.original)
+        self.control.assert_not_called()
+        self.start.assert_not_called()
+        self.assert_preserved()
+
+    def test_active_toggle_confirms_before_stop_and_starts_after_saving(self):
+        self.active.return_value = True
+        events = []
+        def confirm(question):
+            self.assertIn('disconnect briefly', self.output.getvalue())
+            self.assertIn('laptop will mirror', self.output.getvalue())
+            self.control.assert_not_called()
+            return 'yes'
+        self.confirm.side_effect = confirm
+        self.control.side_effect = lambda *args, **kwargs: events.append(args)
+        self.recover.side_effect = lambda paths: events.append(('recover',))
+        def start(paths):
+            self.assertEqual(common.settings(paths)['virtual'], [2560, 1600])
+            events.append(('start',))
+        self.start.side_effect = start
+        self.assertIn('restarted', cli.change_display(self.paths, [2560, 1600]))
+        self.assertEqual(events, [('stop', common.UNIT), ('recover',), ('start',)])
+        self.assert_preserved()
+
+    def test_cancel_invalid_size_and_same_selection_never_change_state(self):
+        for answer in ('', 'no', EOFError(), KeyboardInterrupt()):
+            self.confirm.side_effect = answer if isinstance(answer, BaseException) else None
+            self.confirm.return_value = answer
+            self.assertIn('unchanged', cli.change_display(self.paths, [1920, 1200]))
+        with self.assertRaises(common.Error):
+            cli.change_display(self.paths, [100, 100])
+        self.assertIn('already selected', cli.change_display(self.paths, None))
+        self.assertEqual(common.settings(self.paths), self.original)
+        self.control.assert_not_called()
+        self.recover.assert_not_called()
+        self.start.assert_not_called()
+
+    def test_failed_restart_restores_previous_choice_and_keeps_sharing_stopped(self):
+        self.active.return_value = True
+        self.start.side_effect = common.Error('Cannot capture requested mode')
+        with self.assertRaisesRegex(common.Error, 'previous choice was restored'):
+            cli.change_display(self.paths, [2560, 1600])
+        self.assertEqual(common.settings(self.paths), self.original)
+        self.assertEqual(self.control.call_args_list, [unittest.mock.call('stop', common.UNIT)] * 2)
+        self.assertEqual(self.start.call_count, 1)
+        self.assert_preserved()
+
+    def test_stop_failure_leaves_settings_untouched(self):
+        self.active.return_value = True
+        self.control.side_effect = common.Error('Cannot stop the service')
+        with self.assertRaisesRegex(common.Error, 'Cannot stop'):
+            cli.change_display(self.paths, [2560, 1600])
+        self.assertEqual(common.settings(self.paths), self.original)
+        self.start.assert_not_called()
+
+    def test_failed_cleanup_retains_current_settings_and_reports_recovery(self):
+        self.active.return_value = True
+        self.start.side_effect = common.Error('Cannot start')
+        self.recover.side_effect = [None, common.Error('Display unavailable')]
+        with self.assertRaisesRegex(common.Error, 'cleanup needs attention'):
+            cli.change_display(self.paths, [2560, 1600])
+        self.assertEqual(common.settings(self.paths)['virtual'], [2560, 1600])
+        self.assert_preserved()
+
+    def test_help_can_be_shown_and_hidden_without_locks_or_mutations(self):
+        self.confirm.side_effect = ['h', 'h', 'q']
+        with patch.object(cli, 'lock', side_effect=AssertionError('Reading the guide must not lock controls')):
+            cli.display_menu(self.paths)
+        output = self.output.getvalue()
+        self.assertEqual(output.count('DISPLAY SIZE AND SHARPNESS'), 1)
+        self.assertIn('h  Hide display instructions', output)
+        self.assertEqual(common.settings(self.paths), self.original)
+        self.control.assert_not_called()
+        self.recover.assert_not_called()
+
+    def test_menu_dispatches_presets_custom_and_return_to_normal(self):
+        self.confirm.side_effect = ['2', '3', '4', '5', '3000x2000', '1', 'q']
+        with patch.object(cli, 'change_display', return_value='Saved') as change:
+            cli.display_menu(self.paths)
+        self.assertEqual([call.args[1] for call in change.call_args_list],
+                         [[1920, 1200], [2560, 1600], [3840, 2160], [3000, 2000], None])
+
+    def test_invalid_menu_input_and_custom_cancel_do_not_change_display(self):
+        self.confirm.side_effect = ['oops', '5', 'not-a-size', '5', '', 'q']
+        with patch.object(cli, 'change_display') as change:
+            cli.display_menu(self.paths)
+        change.assert_not_called()
+        self.assertIn('Use WIDTHxHEIGHT', self.output.getvalue())
+
+    def test_guide_cli_works_without_setup_or_terminal(self):
+        self.paths.settings.unlink()
+        with patch.object(cli.sys.stdin, 'isatty', return_value=False), \
+             patch.object(cli, 'Paths', return_value=self.paths), \
+             patch.object(cli.sys, 'argv', ['mac-native-screenshare', 'display', '--guide']):
+            cli.main()
+        self.assertIn('DISPLAY SIZE AND SHARPNESS', self.output.getvalue())
+        self.confirm.assert_not_called()
+        self.control.assert_not_called()
 
 
 class DisplayTests(Workspace):
