@@ -1,6 +1,8 @@
 # Restore the development workspace
 
-The repositories are private. Authenticate to GitHub using an account with access before cloning. Run these commands in a new, empty parent directory; they create the local dependency names expected by `build.sh`:
+For a release rebuild, use the complete `.src.tar.gz` bundle and [packaging instructions](PACKAGING.md); access to the separate dependency repositories is unnecessary.
+
+The commands below restore the maintainer's development workspace. The dependency and historical backup repositories are private; authenticate with an account that has access before cloning. Run these commands in a new, empty parent directory; they create the local dependency names expected by `build.sh`:
 
 ```bash
 gh repo clone LoFenk/mac-native-screenshare mac-native-screenshare -- --branch main
@@ -37,4 +39,4 @@ The files in [checkpoint/](checkpoint/) are historical records. Statements there
 
 ## What the backup contains
 
-The repositories preserve source code, commits, upstream authorship, licenses, dependency pins, and verification records. They do not contain host credentials, raw private logs, personal desktop configuration, downloaded Apple binaries, or build outputs. Recreating an enabled sharing service still requires the planned setup and lifecycle work; cloning these sources does not enable sharing.
+The repositories preserve source code, commits, upstream authorship, licenses, dependency pins, and verification records. They do not contain host credentials, raw private logs, personal desktop configuration, downloaded Apple binaries, or build outputs. The package's explicit setup generates new local credentials and configures sharing. Cloning these sources does not enable sharing.

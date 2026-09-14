@@ -2,7 +2,20 @@
 
 An independent, experimental add-on project for using the Mac's built-in Screen Sharing client with an Omarchy desktop: Finder discovery, text clipboard in both directions, Mac keyboard shortcuts, and display sizing.
 
-**Status: experimental developer preview, 0.1.0 alpha 2. Setup, service controls, and recovery/removal are implemented.** The working prototype has been tested on one Omarchy host and one Mac. The packaged lifecycle still needs another machine's acceptance testing before release; automated and detached-server checks are not real-client acceptance.
+**Status: experimental developer preview, 0.1.0 alpha 2. Setup, service controls, and recovery/removal are implemented.** The working prototype has been tested on one Omarchy host and one Mac. The packaged lifecycle still needs another machine's acceptance testing before a stable release; automated and detached-server checks are not real-client acceptance.
+
+**Project contact: Paul Stoica <paul@totallynormal.io>. The project-specific implementation, tests, packaging, and documentation were produced using OpenAI Codex at Paul's direction.** His commit identity does not imply manual authorship or independent code review. Upstream authors retain credit for their code; see [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md).
+
+## Download and install
+
+Use the binary package and `SHA256SUMS` from the [alpha 2 revision 2 release](https://github.com/LoFenk/mac-native-screenshare/releases/tag/v0.1.0-alpha.2-r2). While the repository is private, downloads require an account with access. Once public, the same release page permits public downloads. Read the [usage guide](docs/USAGE.md) before configuring sharing.
+
+```bash
+sha256sum -c SHA256SUMS --ignore-missing
+sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-2-x86_64.pkg.tar.zst
+```
+
+The attached `.src.tar.gz` is the complete rebuildable source bundle, including the modified dependencies. It can be rebuilt without access to the separate dependency repositories. GitHub's automatically generated source archives are not that complete bundle. See [packaging instructions](docs/PACKAGING.md).
 
 ## Repositories
 
@@ -13,9 +26,9 @@ An independent, experimental add-on project for using the Mac's built-in Screen 
 | [wayvnc-native-screen-sharing](https://github.com/LoFenk/wayvnc-native-screen-sharing) | Modified WayVNC with clipboard teardown, keyboard, pointer, and display-switch fixes | `native-screen-sharing` |
 | [omarchy-native-screen-sharing](https://github.com/LoFenk/omarchy-native-screen-sharing) | Historical backup of the original Omarchy integration checkpoint | `native-screen-sharing` |
 
-These repositories are private backups during development. The standalone build needs only the first three repositories. [dependencies.json](dependencies.json) records the exact modified dependency commits and their upstream bases. [docs/RECOVERY.md](docs/RECOVERY.md) explains how to restore the workspace.
+The dependency and historical backup repositories are currently private. They are optional for users rebuilding the complete release source bundle. A development build from Git checkouts needs the first three repositories. [dependencies.json](dependencies.json) records the exact modified dependency commits and their upstream bases. [docs/RECOVERY.md](docs/RECOVERY.md) explains how to restore the workspace.
 
-This is a community project, independently maintained from Omarchy, WayVNC, NeatVNC, and Apple. AI assistance was used to research and implement the prototype and prepare these repositories. Original upstream authorship and licenses are retained; see [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md).
+This project is independent of Omarchy, WayVNC, NeatVNC, and Apple; none of those projects endorses this package. Report issues with this add-on here, following [CONTRIBUTING.md](CONTRIBUTING.md).
 
 See [the first release scope](docs/RELEASE_SCOPE.md) for the target environment, feature boundaries, network limitations, and release gates.
 
@@ -69,4 +82,4 @@ The native compatibility path uses password-authenticated legacy VNC with **unen
 
 ## License and provenance
 
-Integration sources are preserved under the [MIT license](LICENSE) from their Omarchy source checkpoint. NeatVNC and WayVNC keep their separate ISC licenses in their own repositories. [docs/checkpoint/extraction.json](docs/checkpoint/extraction.json) records the original integration commit and file hashes; the first commit of this repository preserves those imported files byte for byte.
+Integration sources are preserved under the [MIT license](LICENSE) from their Omarchy source checkpoint. NeatVNC and WayVNC keep their separate ISC licenses. The package also includes the [full third-party notices](packaging/arch/THIRD-PARTY-NOTICES), including BSD-2-Clause and BSD-3-Clause terms for bundled code. [docs/checkpoint/extraction.json](docs/checkpoint/extraction.json) records the original integration commit and file hashes; the first commit of this repository preserves those imported files byte for byte.
