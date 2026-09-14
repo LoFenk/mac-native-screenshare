@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Check a staged or packaged private runtime without opening a desktop session."""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -35,10 +36,18 @@ def verify_root(root):
                                              'mns_relay.py', 'mns_discovery.py', 'package-lifecycle.py')],
                 DOCS / 'RELEASE_SCOPE.md', DOCS / 'sources.json',
                 LICENSES / 'LICENSE', LICENSES / 'neatvnc-COPYING',
-                LICENSES / 'wayvnc-COPYING']
+                LICENSES / 'wayvnc-COPYING', LICENSES / 'THIRD-PARTY-NOTICES']
     for name in expected:
         if not (root / name).is_file():
             raise ValueError('Missing package file: ' + str(name))
+    notices = (root / LICENSES / 'THIRD-PARTY-NOTICES').read_bytes()
+    canonical = Path(__file__).with_name('THIRD-PARTY-NOTICES')
+    if hashlib.sha256(notices).digest() != hashlib.sha256(canonical.read_bytes()).digest():
+        raise ValueError('Packaged third-party notices do not match the recipe')
+    for required in (b'Yann Collet', b'The Regents of the University of California',
+                     b'Redistributions in binary form', b'BSD 2-Clause License', b'BSD-3-Clause'):
+        if required not in notices:
+            raise ValueError('Missing bundled-code attribution or redistribution terms')
     files = []
     for path in root.rglob('*'):
         relative = path.relative_to(root)
@@ -101,6 +110,9 @@ def verify_archive(package):
     info = run('bsdtar', '-xOf', str(package), '.PKGINFO')
     assert 'pkgname = ' + PACKAGE + '\n' in info
     assert 'arch = x86_64\n' in info
+    for license_id in ('MIT', 'ISC', 'BSD-2-Clause', 'BSD-3-Clause'):
+        if 'license = ' + license_id + '\n' not in info:
+            raise ValueError('Missing package license metadata: ' + license_id)
     for line in info.splitlines():
         if line.startswith(('provides = ', 'replaces = ', 'conflict = ')):
             raise ValueError('Package must not replace or provide system VNC packages')

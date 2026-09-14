@@ -1,12 +1,12 @@
-# Maintainer: Paul Stoica
-# Independent AI-assisted developer preview; installation leaves sharing disabled.
+# Maintainer: Paul Stoica <paul@totallynormal.io>
+# Project-specific code and packaging produced using OpenAI Codex; see ACKNOWLEDGEMENTS.md.
 pkgname=mac-native-screenshare
 pkgver=0.1.0alpha2
-pkgrel=1
+pkgrel=2
 pkgdesc='Experimental native Mac Screen Sharing add-on for Omarchy'
 arch=('x86_64')
 url='https://github.com/LoFenk/mac-native-screenshare'
-license=('MIT' 'ISC')
+license=('MIT' 'ISC' 'BSD-2-Clause' 'BSD-3-Clause')
 depends=(
   'bash' 'coreutils' 'glibc>=2.44'
   'aml>=1.0.0' 'aml<2.0.0' 'pixman' 'libjpeg-turbo' 'gnutls'
@@ -21,24 +21,26 @@ checkdepends=('lua')
 # Keep normal Arch hardening; avoid a separate debug artifact and LTO in this preview.
 options=('!debug' '!lto')
 source=(
-  'integration-6136589c61daaad32b83b19a1679d0f6d648e353.tar.gz'
+  'integration-08ebb7eafe816b58dc4461a77e8a8e17f5ef1b8c.tar.gz'
   'neatvnc-458553ce35b8828f9973b20f36fe3fc8460b45ab.tar.gz'
   'wayvnc-5c2fc1356d84c192d23481fa526fee30ca749ac8.tar.gz'
   'wayvnc-private-rpath.patch'
   'sources.json'
   'README-PACKAGE.md'
   'verify-package.py'
+  'THIRD-PARTY-NOTICES'
 )
 sha256sums=(
-  '3faf7f372a83fff05a75f68217e1b9c62de63a9a52ef065c2d0ff418a8f67cdf'
+  '2052664861efb38339d6fea48c6cd1576d9713dcd4f79f7671e6d70b555adf31'
   'adeaa1d9a9a7baee686b9ab28c526f8faff7aaa5a472ce21102c229f30aefc1b'
   '34e3235373255dd43afc93d1983198bb37a63ee6ad461b16fc846febdc6ffefe'
   '8c3e05e3f257cee878a520d9631c5d2c6e1baa330b50a889a6a5fc2765bbbc14'
-  '7d2ba73b535bd75e2f9098be6b36d584fc1a60a4943d17368c975a1b89a94364'
-  'f232014e00424b90dea773bc045d037e88d0019892cc89dfbc43ffb2892d87dd'
-  'e28fa2901c618b4a55d16087590f4526775abdee41021e425c77241b0cb9a113'
+  'b973dde12e21757f6060825e2e937999b790a439749c8f5276bad96d073b2fa6'
+  '1ad563df175196cc823d4c931eeebe6be22f9be246ddce71835a14fb410d9aa1'
+  '93bd050a57ab20fb99f9ff4a753a2193d5b0f23b257a01fd05d513f69891f827'
+  '0cd39a006c67c5f41d995607eb1ab9a5767c6e5791614083d23882805c458763'
 )
-export SOURCE_DATE_EPOCH=1789355188
+export SOURCE_DATE_EPOCH=1789393045
 
 prepare() {
   patch --directory="$srcdir/wayvnc" --strip=1 --input="$srcdir/wayvnc-private-rpath.patch"
@@ -116,5 +118,6 @@ package() {
   install -Dm644 "$srcdir/integration/LICENSE" "$_licenses/LICENSE"
   install -Dm644 "$srcdir/neatvnc/COPYING" "$_licenses/neatvnc-COPYING"
   install -Dm644 "$srcdir/wayvnc/COPYING" "$_licenses/wayvnc-COPYING"
+  install -Dm644 "$srcdir/THIRD-PARTY-NOTICES" "$_licenses/THIRD-PARTY-NOTICES"
   /usr/bin/python3 "$srcdir/verify-package.py" --root "$pkgdir"
 }

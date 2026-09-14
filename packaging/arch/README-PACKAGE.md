@@ -1,6 +1,6 @@
 # Mac Native Screenshare developer package
 
-Version 0.1.0alpha2 is an experimental add-on for x86-64 Omarchy 4.0 / Hyprland 0.56. Setup and service lifecycle are implemented; real second-host/Mac acceptance remains pending.
+Version 0.1.0alpha2-2 is an experimental add-on for x86-64 Omarchy 4.0 / Hyprland 0.56. Setup and service lifecycle are implemented; real second-host/Mac acceptance remains pending.
 
 The package contains private modified WayVNC/NeatVNC components, a `mac-native-screenshare` command, a disabled user unit, and scoped cleanup hooks for upgrade/removal. It coexists with stock WayVNC/NeatVNC. Installing it does not start sharing, enable startup, create credentials, change desktop configuration, or alter firewall rules.
 
@@ -9,8 +9,8 @@ The package contains private modified WayVNC/NeatVNC components, a `mac-native-s
 On a supported host with the declared dependencies available:
 
 ```bash
-pacman -Qip ./mac-native-screenshare-0.1.0alpha2-1-x86_64.pkg.tar.zst
-sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-1-x86_64.pkg.tar.zst
+pacman -Qip ./mac-native-screenshare-0.1.0alpha2-2-x86_64.pkg.tar.zst
+sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-2-x86_64.pkg.tar.zst
 mac-native-screenshare setup
 mac-native-screenshare password
 mac-native-screenshare start
@@ -30,4 +30,4 @@ sudo pacman -R mac-native-screenshare
 
 Upgrade hooks stop sharing before replacing files and retain settings/startup preference. Removal hooks clean configured regular users after dropping privileges. Cleanup failures abort the transaction so the recovery tools remain available. Unrelated edits and unrecognized files are preserved. Administrator-created firewall rules remain separately managed.
 
-See RELEASE_SCOPE.md for targets and acceptance gates, and sources.json for exact commits/archive hashes. Licenses are under `/usr/share/licenses/mac-native-screenshare/`. Substantial AI assistance was used; upstream endorsement, human audit, and production readiness are not implied.
+See RELEASE_SCOPE.md for targets and acceptance gates, and sources.json for exact commits/archive hashes. Licenses are under `/usr/share/licenses/mac-native-screenshare/`. Project contact: Paul Stoica <paul@totallynormal.io>. The project-specific implementation, tests, packaging, and documentation were produced using OpenAI Codex at Paul's direction. His commit identity is not a claim of manual authorship or independent code review. Upstream authors retain credit for their code. Endorsement and production readiness are not implied.

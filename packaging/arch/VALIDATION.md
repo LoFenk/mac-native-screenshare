@@ -1,3 +1,36 @@
+# 0.1.0alpha2-2 publication preparation and validation
+
+Validated September 14, 2026. This package revision preserves alpha 2 runtime behavior, adds the complete bundled-code notices, uses the approved project contact, and removes personal workstation metadata from the build artifacts. It remains an unsigned experimental preview. Installation leaves sharing disabled; second-machine/Mac and live desktop acceptance remain pending.
+
+## Authorship and source
+
+Project contact: Paul Stoica <paul@totallynormal.io>. The project-specific implementation, tests, packaging, and documentation were produced using OpenAI Codex at Paul's direction. The Git identity identifies the contact and does not imply manual authorship or independent code review. Upstream authors retain credit for their work.
+
+Integration source: `08ebb7eafe816b58dc4461a77e8a8e17f5ef1b8c`. The WayVNC and NeatVNC pins are unchanged. `sources.json` records all three commits and source checksums; the complete `.src.tar.gz` contains those source snapshots and the recipe. The outer recipe is authoritative when rebuilding the bundle.
+
+The binary includes the MIT/ISC license files and 62 distinct upstream notice blocks covering bundled source, headers, and protocol definitions, including xxHash (BSD-2-Clause) and BSD queues (BSD-3-Clause). Package license metadata includes the BSD licenses. Verification checks the complete packaged notice file against the recipe and rejects incomplete notices.
+
+## Completed validation
+
+- Full two-job build in an isolated, network-disabled namespace using a generic builder account and `/work` directory.
+- Four NeatVNC suites, three WayVNC suites, 13 integration checks, 26 lifecycle checks, five package transaction checks, Mac shortcut/Lua hook checks, and two real detached-WayVNC supervisor checks passed.
+- Compressed package checks passed for file layout, permissions, licenses, disabled startup, transaction hooks, private RUNPATH, bundled-library resolution, CLI/binary smoke checks, and stock VNC file coexistence.
+- A temporary pacman root passed installation, upgrade from `0.1.0alpha2-1`, and removal without residual package files or a database record. Lifecycle hooks are tested separately; the temporary root masks them because it has no desktop user managers.
+- The complete source bundle verified all inputs offline. Its PKGBUILD hash matches the binary's `.BUILDINFO`.
+- `.BUILDINFO` records the approved contact, generic `/work` paths, and the 173 selected package records from the build environment. It does not contain the personal workstation's complete package inventory.
+
+## Build environment and limits
+
+The isolated root was assembled from selected installed package-owned `/usr` files and package records, with generic configuration generated separately. Factory configuration and an unreadable privileged D-Bus launcher were omitted. It had no host home directory, desktop/session sockets, machine credentials, or network access. Meson 1.12.0 and Ninja 1.13.2 were included as external tools and are explicitly recorded outside pacman's package inventory in `build-environment.json`.
+
+Build dependencies available in the root and external tool versions were checked before `makepkg --nodeps`. The full declared runtime dependencies were checked separately on the target host, including Omarchy 4.0.3 / Hyprland 0.56.2 and the Nettle 4 ABIs. The root intentionally omits the full desktop runtime. This is an isolated build from selected host package files, not a clean chroot installed from freshly downloaded packages or a bit-identical reproducible-build claim.
+
+Desktop, NetworkManager, Avahi, and root transaction operations are simulated in the automated lifecycle tests. Real Mac connection, virtual displays, graphical login/reboot, active desktop upgrades/removal, and an independent security audit remain outstanding. Unchanged upstream compiler warnings remain. Native VNC desktop, input, and clipboard transport is unencrypted and limited to the selected trusted private LAN.
+
+No package was installed on the active desktop. Its existing lab service, credentials, configuration, and firewall were not changed.
+
+---
+
 # 0.1.0alpha2-1 packaging and lifecycle validation
 
 Validated on September 13, 2026. This unsigned private developer preview implements roadmap steps 4 and 5. Installation leaves sharing disabled; real desktop/Mac acceptance is still step 6.

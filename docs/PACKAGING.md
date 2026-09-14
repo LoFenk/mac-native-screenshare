@@ -1,6 +1,6 @@
 # Build the experimental Arch package
 
-The package name is `mac-native-screenshare`, version `0.1.0alpha2-1`, for `x86_64`. It targets the environment in [RELEASE_SCOPE.md](RELEASE_SCOPE.md). Installation leaves sharing disabled. The package installs a user unit and upgrade/removal hooks, but does not enable startup, create credentials, change firewall rules, or edit desktop configuration. Explicit setup and controls are documented in [USAGE.md](USAGE.md).
+The package name is `mac-native-screenshare`, version `0.1.0alpha2-2`, for `x86_64`. It targets the environment in [RELEASE_SCOPE.md](RELEASE_SCOPE.md). Installation leaves sharing disabled. The package installs a user unit and upgrade/removal hooks, but does not enable startup, create credentials, change firewall rules, or edit desktop configuration. Explicit setup and controls are documented in [USAGE.md](USAGE.md).
 
 ## Source and recipe layout
 
@@ -8,9 +8,25 @@ The recipe lives in [packaging/arch/PKGBUILD](../packaging/arch/PKGBUILD), with 
 
 The integration source is pinned to the commit implementing setup, service controls, recovery, and transaction cleanup. Later packaging/documentation commits do not silently change that source snapshot. The two VNC branches remain at their original tested commits. The recipe applies a small, checksum-verified Meson patch to WayVNC solely to set the installed binaries' private library search path.
 
-Sources are exported locally because the repositories are private. Authentication tokens are not put in download URLs or a `PKGBUILD`. The export helper reads the named Git commits, not uncommitted working-tree contents, and verifies their archive hashes before writing a new build directory. It refuses to overwrite a nonempty directory.
+Maintainer exports are made from local Git checkouts. Release users can instead use the complete source bundle, which contains all three source snapshots. Authentication tokens are not put in download URLs or a `PKGBUILD`. The export helper reads the named Git commits, not uncommitted working-tree contents, and verifies their archive hashes before writing a new build directory. It refuses to overwrite a nonempty directory.
 
-## Build
+## Rebuild from the complete source bundle
+
+Download `mac-native-screenshare-0.1.0alpha2-2.src.tar.gz` and `SHA256SUMS` from the [release page](https://github.com/LoFenk/mac-native-screenshare/releases/tag/v0.1.0-alpha.2-r2). Private-repository access is needed only while the release itself is private. The separate dependency repositories are not needed after downloading this bundle.
+
+```bash
+sha256sum -c SHA256SUMS --ignore-missing
+mkdir rebuild
+bsdtar -xf mac-native-screenshare-0.1.0alpha2-2.src.tar.gz -C rebuild
+cd rebuild/mac-native-screenshare
+makepkg --verifysource
+makepkg
+python verify-package.py --package ./mac-native-screenshare-0.1.0alpha2-2-x86_64.pkg.tar.zst
+```
+
+Install the declared build dependencies before running `makepkg`. Source verification and compilation then use the attached snapshots without fetching private Git repositories. The integration snapshot, recipe, and checksum manifest are versioned together. GitHub's automatic source archives alone do not contain the dependency snapshots.
+
+## Export from maintainer Git checkouts
 
 Restore the three-repository workspace using [RECOVERY.md](RECOVERY.md). From its parent directory, run:
 
@@ -21,7 +37,7 @@ Restore the three-repository workspace using [RECOVERY.md](RECOVERY.md). From it
 cd package-build/0.1.0alpha2
 makepkg
 /usr/bin/python3 verify-package.py \
-  --package ./mac-native-screenshare-0.1.0alpha2-1-x86_64.pkg.tar.zst
+  --package ./mac-native-screenshare-0.1.0alpha2-2-x86_64.pkg.tar.zst
 ```
 
 Use a new output directory for a fresh build. The builder needs Arch's `base-devel` and the runtime/build/check dependencies declared in the recipe, including Meson 1.12 or newer and Ninja. `makepkg` does not install anything unless explicitly invoked with install/dependency-install options, which the commands above omit.
@@ -34,7 +50,7 @@ To create a self-contained source package containing the exact archives and reci
 makepkg --allsource
 ```
 
-That source package can be rebuilt without access to the private repositories once the required build dependencies are available. It must be kept private until a public release is authorized. These steps do not claim a hermetic or bit-identical binary build: system libraries and toolchains are recorded by `.BUILDINFO`, not vendored into the package.
+That source package can be rebuilt without access to the private repositories once the required build dependencies are available. These steps do not claim a hermetic or bit-identical binary build: system libraries and toolchains are recorded by `.BUILDINFO`, not vendored into the package.
 
 ## Installed files and dependency isolation
 
@@ -54,7 +70,7 @@ That source package can be rebuilt without access to the private repositories on
 /usr/share/doc/mac-native-screenshare/
   README.md, USAGE.md, RELEASE_SCOPE.md, ACKNOWLEDGEMENTS.md, sources.json
 /usr/share/licenses/mac-native-screenshare/
-  LICENSE, neatvnc-COPYING, wayvnc-COPYING
+  LICENSE, neatvnc-COPYING, wayvnc-COPYING, THIRD-PARTY-NOTICES
 ```
 
 The installed WayVNC binaries use `$ORIGIN/../lib` as their runtime library search path. Meson's install step removes the absolute build-library path. The package does not install `/usr/bin/wayvnc`, a global `libneatvnc`, pkg-config files, or development headers, and does not declare `provides`, `conflicts`, or `replaces` for the stock packages. The runtime scripts choose the private control client as well as the private server; a missing private runtime is an error rather than a fallback to stock software.
@@ -75,4 +91,6 @@ Commit and test the intended integration/dependency changes first. Update `sourc
 
 Reference: [Arch PKGBUILD manual](https://man.archlinux.org/man/PKGBUILD.5.en), [makepkg manual](https://man.archlinux.org/man/makepkg.8.en), and [Meson installation documentation](https://mesonbuild.com/Installing.html).
 
-The completed validation and the use of existing Meson/Ninja tools outside the package database are recorded in [packaging/arch/VALIDATION.md](../packaging/arch/VALIDATION.md).
+Use a minimal build environment with a generic account and build directory. `.BUILDINFO` records the packages visible in that environment; do not build release artifacts with a personal workstation package inventory or put personal tool paths into release reports. Record external build tools by version and disclose any departure from a fresh-package clean chroot.
+
+The completed validation and build environment are recorded in [packaging/arch/VALIDATION.md](../packaging/arch/VALIDATION.md).

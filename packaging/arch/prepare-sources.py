@@ -41,7 +41,7 @@ def main():
     output.mkdir(parents=True, exist_ok=True)
     for name, data in exports:
         (output / name).write_bytes(data)
-    for name in ['PKGBUILD', 'sources.json', 'wayvnc-private-rpath.patch', 'README-PACKAGE.md', 'verify-package.py']:
+    for name in ['PKGBUILD', 'sources.json', 'wayvnc-private-rpath.patch', 'README-PACKAGE.md', 'verify-package.py', 'THIRD-PARTY-NOTICES']:
         shutil.copy2(here / name, output / name)
     print('Offline package workspace:', output)
     print('Next: run makepkg inside that directory with the declared dependencies installed.')
