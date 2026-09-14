@@ -1,6 +1,6 @@
-# First release scope: 0.1.0 alpha 1
+# First release scope: 0.1.0 alpha 2
 
-This is an experimental developer preview. The package milestone installs inert software files; it does not yet provide supported setup, service enablement, reboot recovery, or removal of runtime configuration. Those are the next implementation milestones. A public release remains gated on a second machine's acceptance tests.
+This is an experimental developer preview. Setup, service enablement, reboot ordering, and removal/recovery are implemented and covered by isolated tests. Installation leaves sharing disabled. A public release remains gated on a second machine's real desktop and Mac acceptance tests. See [USAGE.md](USAGE.md) for the controls and lifecycle limits.
 
 ## Target environment
 
@@ -23,13 +23,13 @@ The original host's prototype demonstrated these behaviors. The packaged install
 
 ## Transport and access limits
 
-The native compatibility mode uses legacy VNC password authentication. Desktop, input, and clipboard traffic are **not encrypted by VNC**; the password mechanism only uses eight bytes. Future setup must generate a fresh random eight-character credential, store it privately, and require explicit enablement.
+The native compatibility mode uses legacy VNC password authentication. Desktop, input, and clipboard traffic are **not encrypted by VNC**; the password mechanism only uses eight bytes. Setup generates a fresh random eight-character credential, stores it privately, and requires acceptance of the transport limitation. Starting and login enablement are explicit commands.
 
 Initial use is confined to a deliberately selected trusted private LAN, with access and discovery restricted to that selection. It must not automatically listen on every interface, enable router forwarding, expose the service publicly, or assume that password authentication encrypts the connection. Network/profile changes should stop discovery and sharing. A VPN or SSH tunnel could protect transport, but automatic tunnel setup and cross-subnet Finder discovery are outside the first release scope.
 
 ## Package milestone
 
-The package owns only its private software tree and documentation/licenses. It does not replace Arch's `wayvnc` or `neatvnc`, claim to provide their system libraries, modify Hyprland configuration, install an auto-start unit, create a credential, or open a firewall port. Package files can be installed and removed normally by pacman. Configuration and service lifecycle acceptance remains unfinished.
+The package owns a private software tree, documentation/licenses, one CLI launcher, a disabled user unit, and two pre-transaction cleanup hooks. It does not replace Arch's `wayvnc` or `neatvnc` or claim to provide their system libraries. Installing it does not modify Hyprland configuration, enable startup, create credentials, or open firewall ports. Explicit setup owns two marked user config blocks and private settings; removal preserves unrelated edits. Global Avahi enablement and administrator firewall rules remain separately managed. Real desktop and client lifecycle acceptance remains unfinished.
 
 ## Release gates
 

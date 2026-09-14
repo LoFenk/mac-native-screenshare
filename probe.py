@@ -67,8 +67,18 @@ def vnc_response(password, challenge):
     return bytes(result)
 
 
-def legacy_attempt(address, password, expect_success):
-    with socket.create_connection((address, 5900), timeout=3) as connection:
+def legacy_attempt(address, password, expect_success, unix=False):
+    if unix:
+        connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        connection.settimeout(3)
+        try:
+            connection.connect(address)
+        except BaseException:
+            connection.close()
+            raise
+    else:
+        connection = socket.create_connection((address, 5900), timeout=3)
+    with connection:
         if not read_exact(connection, 12).startswith(b"RFB 003."):
             raise RuntimeError("Unexpected RFB banner")
         connection.sendall(b"RFB 003.003\n")
@@ -85,12 +95,16 @@ def legacy_attempt(address, password, expect_success):
         # Close before ClientInit: no framebuffer, clipboard, or input requested.
 
 
-def legacy_probe(address, password):
+def legacy_probe(address, password, unix=False):
     if not 1 <= len(password) <= 8:
         raise ValueError("The legacy test requires one to eight password bytes")
     wrong = bytes([password[0] ^ 1]) + password[1:]
-    legacy_attempt(address, wrong, False)
-    legacy_attempt(address, password, True)
+    if unix:
+        legacy_attempt(address, wrong, False, unix=True)
+        legacy_attempt(address, password, True, unix=True)
+    else:
+        legacy_attempt(address, wrong, False)
+        legacy_attempt(address, password, True)
     print("RFB 3.3 DES authentication checked: incorrect password rejected; correct password accepted. No desktop content requested.")
 
 

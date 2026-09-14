@@ -1,0 +1,10 @@
+[Trigger]
+Operation = Upgrade
+Type = Package
+Target = mac-native-screenshare
+
+[Action]
+Description = Stopping native Mac screen sharing before its files are upgraded...
+When = PreTransaction
+Exec = /usr/bin/python3 /usr/lib/mac-native-screenshare/package-lifecycle.py upgrade
+AbortOnFail

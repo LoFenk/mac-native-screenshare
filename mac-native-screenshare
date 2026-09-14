@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/bin/python3 /usr/lib/mac-native-screenshare/mns_cli.py "$@"

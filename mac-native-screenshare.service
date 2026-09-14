@@ -1,0 +1,27 @@
+[Unit]
+Description=Native Mac Screen Sharing for the current Omarchy desktop
+Documentation=file:/usr/share/doc/mac-native-screenshare/USAGE.md
+PartOf=graphical-session.target
+Requisite=graphical-session.target
+After=graphical-session.target wayland-session-waitenv.service
+StartLimitIntervalSec=120
+StartLimitBurst=3
+
+[Service]
+Type=notify
+NotifyAccess=main
+ExecStart=/usr/bin/python3 /usr/lib/mac-native-screenshare/mns_session.py
+ExecStopPost=/usr/bin/python3 /usr/lib/mac-native-screenshare/mns_cli.py recover
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=90
+TimeoutStopSec=45
+KillMode=control-group
+UMask=0077
+LimitCORE=0
+NoNewPrivileges=yes
+Environment=PYTHONDONTWRITEBYTECODE=1
+Slice=app.slice
+
+[Install]
+WantedBy=graphical-session.target

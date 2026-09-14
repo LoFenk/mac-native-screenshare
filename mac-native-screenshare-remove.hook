@@ -1,0 +1,10 @@
+[Trigger]
+Operation = Remove
+Type = Package
+Target = mac-native-screenshare
+
+[Action]
+Description = Restoring native Mac screen-sharing desktops and removing owned user configuration...
+When = PreTransaction
+Exec = /usr/bin/python3 /usr/lib/mac-native-screenshare/package-lifecycle.py remove
+AbortOnFail

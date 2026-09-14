@@ -2,7 +2,7 @@
 
 An independent, experimental add-on project for using the Mac's built-in Screen Sharing client with an Omarchy desktop: Finder discovery, text clipboard in both directions, Mac keyboard shortcuts, and display sizing.
 
-**Status: experimental developer preview, 0.1.0 alpha 1. An Arch package recipe is available; setup and service lifecycle remain unfinished.** The working prototype has been tested on one Omarchy host and one Mac. The package still needs setup, service lifecycle, and another machine's acceptance testing before release.
+**Status: experimental developer preview, 0.1.0 alpha 2. Setup, service controls, and recovery/removal are implemented.** The working prototype has been tested on one Omarchy host and one Mac. The packaged lifecycle still needs another machine's acceptance testing before release; automated and detached-server checks are not real-client acceptance.
 
 ## Repositories
 
@@ -21,7 +21,7 @@ See [the first release scope](docs/RELEASE_SCOPE.md) for the target environment,
 
 ## Build an Arch package
 
-See [docs/PACKAGING.md](docs/PACKAGING.md) for the checksum-locked recipe, offline source preparation, installed file layout, and package checks, and [the validation record](packaging/arch/VALIDATION.md) for the completed build and isolated installation/removal tests. The package installs inert software components; it does not enable screen sharing. A supported setup command, service lifecycle, and second-host acceptance remain future work.
+See [docs/PACKAGING.md](docs/PACKAGING.md) for the checksum-locked recipe and package checks, [the usage guide](docs/USAGE.md) for setup and lifecycle controls, and [the validation record](packaging/arch/VALIDATION.md) for test evidence. Installation leaves sharing disabled; the desktop user explicitly configures and starts it.
 
 ## Build the source checkpoint
 
@@ -48,8 +48,13 @@ The build does not install software, start sharing, edit desktop configuration, 
 
 ## Integration sources
 
+- `mns_cli.py`, `mns_common.py`, `mns_session.py`: package setup, private settings, user controls, and supervision.
+- `mns_desktop.py`, `hyprland-hook.lua`: exact config ownership, keyboard activation, virtual display reload/restoration, and crash recovery.
+- `mns_relay.py`, `mns_discovery.py`: private Unix backend, subnet-restricted TCP access, interface-scoped Finder discovery, and network revocation.
+- `mac-native-screenshare.service`, `package-lifecycle.py`, and the two pacman hooks: graphical login ordering and cleanup before package replacement/removal.
+- `test-lifecycle.py`, `test-supervisor.py`, `test-package-lifecycle.py`, `test-hyprland-hook.lua`: isolated lifecycle tests and real detached-server checks.
 - `run.sh`, `publish.py`, and `probe.py`: prototype server supervision, network-scoped Finder discovery, and authentication checks. `run.sh` now locates helpers beside itself, without an Omarchy source checkout. It requires private `bin/` and `lib/` directories beside the helpers, or an explicit `MAC_NATIVE_SCREENSHARE_RUNTIME_DIR` pointing to a development staging directory. It never falls back to a system WayVNC binary.
-- `mac-shortcuts.lua` and `mac-shortcuts.sh`: remote-device keyboard mappings and prototype lifecycle control. Service names, runtime markers, and the removable Lua hook still need packaging work.
+- `mac-shortcuts.lua` and `mac-shortcuts.sh`: retained keyboard mappings and historical prototype lifecycle control. The package uses the Lua mappings through its dedicated hook.
 - `virtual-display.py`: the larger virtual-output trial. It takes explicit output and size inputs and currently assumes one unmirrored physical output at scale 1 and position 0,0.
 - `test.py` and `test-mac-shortcuts.lua`: automated checks that do not change the desktop.
 - `check-native-frame.py` and `test-output-switch.py`: explicit live-session diagnostics. They are not part of the build and must only be run against an intentionally configured test session.
@@ -60,7 +65,7 @@ The existing `OMARCHY_SHARE_*` and `OMARCHY_NATIVE_CLIPBOARD` environment names 
 
 The original host's native-client tests covered Finder discovery, automatic text clipboard both ways, pointer rendering, Option + Up, Command + Shift + workspace digits, other common shortcuts, and full-screen sizing. [VERIFICATION.md](VERIFICATION.md) distinguishes those historical results from standalone source checks.
 
-The native compatibility path currently uses password-authenticated legacy VNC with **unencrypted desktop transport**. Packaging must make that limitation explicit and constrain network access appropriately. Installation, persistent service ownership, reboot recovery, upgrades, removal, other display layouts, and additional Mac versions are unfinished. Neither a working prototype nor passing automated tests establishes production readiness.
+The native compatibility path uses password-authenticated legacy VNC with **unencrypted desktop transport**. Setup requires acceptance and a selected private LAN; discovery and the relay are restricted to that selection. Real reboot, upgrade, desktop restoration, performance, and Mac-client acceptance remain step 6. Neither a working prototype nor passing automated tests establishes production readiness.
 
 ## License and provenance
 
