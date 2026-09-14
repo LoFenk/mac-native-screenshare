@@ -12,10 +12,14 @@ PACKAGE = 'mac-native-screenshare'
 PREFIX = Path('usr/lib') / PACKAGE
 DOCS = Path('usr/share/doc') / PACKAGE
 LICENSES = Path('usr/share/licenses') / PACKAGE
+LAUNCHER = Path('usr/bin') / PACKAGE
+UNIT = Path('usr/lib/systemd/user') / (PACKAGE + '.service')
+HOOKS = [Path('usr/share/libalpm/hooks') / (PACKAGE + '-' + kind + '.hook') for kind in ('upgrade', 'remove')]
 
 
 def run(*args):
     env = os.environ.copy()
+    env['PYTHONDONTWRITEBYTECODE'] = '1'
     for key in ('LD_LIBRARY_PATH', 'LD_PRELOAD', 'LD_AUDIT'):
         env.pop(key, None)
     return subprocess.check_output(args, env=env, text=True, stderr=subprocess.STDOUT)
@@ -24,10 +28,11 @@ def run(*args):
 def verify_root(root):
     root = root.resolve()
     expected = [PREFIX / 'bin/wayvnc', PREFIX / 'bin/wayvncctl',
-                PREFIX / 'lib/libneatvnc.so.1', PREFIX / 'run.sh',
-                PREFIX / 'publish.py', PREFIX / 'probe.py',
-                PREFIX / 'mac-shortcuts.lua', PREFIX / 'mac-shortcuts.sh',
-                PREFIX / 'virtual-display.py', DOCS / 'README.md',
+                PREFIX / 'lib/libneatvnc.so.1', PREFIX / 'probe.py',
+                PREFIX / 'mac-shortcuts.lua', PREFIX / 'hyprland-hook.lua',
+                PREFIX / 'VERSION', DOCS / 'README.md', DOCS / 'USAGE.md', LAUNCHER, UNIT, *HOOKS,
+                *[PREFIX / name for name in ('mns_common.py', 'mns_cli.py', 'mns_session.py', 'mns_desktop.py',
+                                             'mns_relay.py', 'mns_discovery.py', 'package-lifecycle.py')],
                 DOCS / 'RELEASE_SCOPE.md', DOCS / 'sources.json',
                 LICENSES / 'LICENSE', LICENSES / 'neatvnc-COPYING',
                 LICENSES / 'wayvnc-COPYING']
@@ -41,7 +46,9 @@ def verify_root(root):
             continue
         if path.is_dir() and not path.is_symlink():
             continue
-        if not any(relative.is_relative_to(prefix) for prefix in (PREFIX, DOCS, LICENSES)):
+        if '__pycache__' in relative.parts or path.suffix == '.pyc':
+            raise ValueError('Generated Python cache in package: ' + str(relative))
+        if relative not in (LAUNCHER, UNIT, *HOOKS) and not any(relative.is_relative_to(prefix) for prefix in (PREFIX, DOCS, LICENSES)):
             raise ValueError('Unexpected file outside private package paths: ' + str(relative))
         if path.is_symlink() and not path.resolve().is_relative_to(root / PREFIX):
             raise ValueError('Symlink escapes private runtime: ' + str(relative))
@@ -64,6 +71,21 @@ def verify_root(root):
         raise ValueError('Server did not load the bundled NeatVNC: ' + loaded)
     run(str(server), '--version')
     run(str(control), '--help')
+    run('/usr/bin/python3', str(root / PREFIX / 'mns_cli.py'), '--help')
+    assert run('/usr/bin/python3', str(root / PREFIX / 'mns_cli.py'), '--version').strip() == (root / PREFIX / 'VERSION').read_text().strip()
+    unit = (root / UNIT).read_text()
+    for directive in ('PartOf=graphical-session.target', 'Requisite=graphical-session.target',
+                      'After=graphical-session.target wayland-session-waitenv.service', 'Type=notify',
+                      'ExecStopPost=/usr/bin/python3 /usr/lib/mac-native-screenshare/mns_cli.py recover',
+                      'KillMode=control-group', 'UMask=0077', 'LimitCORE=0', 'NoNewPrivileges=yes',
+                      'WantedBy=graphical-session.target'):
+        assert directive in unit.splitlines(), directive
+    for hook, operation in zip(HOOKS, ('Upgrade', 'Remove')):
+        content = (root / hook).read_text()
+        for directive in ('Operation = ' + operation, 'Target = ' + PACKAGE, 'When = PreTransaction', 'AbortOnFail',
+                          'Exec = /usr/bin/python3 /usr/lib/mac-native-screenshare/package-lifecycle.py ' + operation.lower()):
+            assert directive in content.splitlines(), directive
+        assert 'Operation = Install' not in content
     # Compare file ownership, not shared directory entries.
     installed = subprocess.run(['pacman', '-Qlq', 'wayvnc', 'neatvnc'], capture_output=True, text=True)
     stock_files = {line for line in installed.stdout.splitlines() if not line.endswith('/')}
@@ -92,7 +114,7 @@ def verify_archive(package):
     with tempfile.TemporaryDirectory(prefix='mac-native-package-check-') as directory:
         subprocess.run(['bsdtar', '--no-same-owner', '-xf', str(package), '-C', directory], check=True)
         verify_root(Path(directory))
-    print('PASS: package metadata and inert installation contents.')
+    print('PASS: package metadata, disabled-by-default unit, and scoped upgrade/removal hooks.')
 
 
 def main():

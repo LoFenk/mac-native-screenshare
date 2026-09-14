@@ -21,3 +21,9 @@ Live desktop diagnostics were excluded. No service was started against the activ
 ## Arch package preview
 
 Steps 2 and 3 are recorded in [the release scope](docs/RELEASE_SCOPE.md), [packaging instructions](docs/PACKAGING.md), and [package validation](packaging/arch/VALIDATION.md). The latter covers the makepkg build, final archive, dependency isolation, and temporary-root installation/removal. It does not extend the original Mac-client runtime acceptance to the packaged deployment.
+
+## Setup and service lifecycle
+
+Steps 4 and 5 are implemented in version 0.1.0alpha2. [USAGE.md](docs/USAGE.md) documents explicit setup, controls, login ordering, owned keyboard/virtual-display changes, recovery, upgrade, and removal. Twenty-six isolated lifecycle tests, five package transaction tests, Lua hook checks, and two real detached-WayVNC supervisor checks cover configuration ownership, interrupted setup, credentials, network restrictions, stream revocation, crash cleanup, and preservation of unrelated files. The systemd unit passed read-only validation.
+
+Desktop, NetworkManager, Avahi, and root transaction operations are simulated in those tests. No package was installed on the active host, and the existing lab service/configuration was left unchanged. Real Mac connection, virtual display behavior, graphical login/reboot, upgrade, and uninstall acceptance remain roadmap step 6.

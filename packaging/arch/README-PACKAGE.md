@@ -1,38 +1,33 @@
 # Mac Native Screenshare developer package
 
-Version 0.1.0alpha1 is an experimental package for x86-64 Omarchy 4.0 / Hyprland 0.56. It is not yet an end-user setup tool or a supported background service.
+Version 0.1.0alpha2 is an experimental add-on for x86-64 Omarchy 4.0 / Hyprland 0.56. Setup and service lifecycle are implemented; real second-host/Mac acceptance remains pending.
 
-The package contains the modified WayVNC server and NeatVNC library, the private control client, prototype integration helpers, source-version metadata, licenses, and release-scope documentation. All executable/library files are under `/usr/lib/mac-native-screenshare/`. It does not replace system WayVNC/NeatVNC files or publish an alternative system library.
+The package contains private modified WayVNC/NeatVNC components, a `mac-native-screenshare` command, a disabled user unit, and scoped cleanup hooks for upgrade/removal. It coexists with stock WayVNC/NeatVNC. Installing it does not start sharing, enable startup, create credentials, change desktop configuration, or alter firewall rules.
 
-Installing it does not start screen sharing, enable startup, create credentials, alter a firewall, or change your desktop. Setup/start/stop/status and managed reboot/removal behavior are later milestones. Do not connect the prototype helper scripts to your desktop as an unattended service using these packaging instructions.
-
-## Inspect and install the inert package
+## Install and configure
 
 On a supported host with the declared dependencies available:
 
 ```bash
-pacman -Qip ./mac-native-screenshare-0.1.0alpha1-1-x86_64.pkg.tar.zst
-pacman -Qlp ./mac-native-screenshare-0.1.0alpha1-1-x86_64.pkg.tar.zst
-sudo pacman -U ./mac-native-screenshare-0.1.0alpha1-1-x86_64.pkg.tar.zst
+pacman -Qip ./mac-native-screenshare-0.1.0alpha2-1-x86_64.pkg.tar.zst
+sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-1-x86_64.pkg.tar.zst
+mac-native-screenshare setup
+mac-native-screenshare password
+mac-native-screenshare start
+mac-native-screenshare status
 ```
 
-These commands are for someone intentionally testing package installation. The packaging build itself never runs them against the live host. The private binaries can be inspected without starting a server:
+Run the add-on commands as the logged-in desktop user, without sudo. Setup requires an explicitly selected trusted private LAN and acknowledgement that native VNC desktop/input/clipboard transport is unencrypted. Avahi must already be active, and firewall/mDNS access is separately managed. Do not expose this preview to the internet.
+
+Read **USAGE.md** before configuration. It covers startup, larger virtual displays, recovery, password rotation, firewall guidance, upgrades, and removal. It also explains why the original lab hook must be retired before adopting this package on the development host. The package does not migrate that working lab automatically.
+
+For deliberate removal:
 
 ```bash
-/usr/lib/mac-native-screenshare/bin/wayvnc --version
-/usr/lib/mac-native-screenshare/bin/wayvncctl --help
-```
-
-Normal package removal deletes the installed files:
-
-```bash
+mac-native-screenshare remove
 sudo pacman -R mac-native-screenshare
 ```
 
-No runtime configuration is installed by this preview. Configuration created manually is outside this package-file test. The stock `wayvnc` and `neatvnc` packages can coexist with it.
+Upgrade hooks stop sharing before replacing files and retain settings/startup preference. Removal hooks clean configured regular users after dropping privileges. Cleanup failures abort the transaction so the recovery tools remain available. Unrelated edits and unrecognized files are preserved. Administrator-created firewall rules remain separately managed.
 
-## Native transport limitation
-
-The intended Mac compatibility path uses legacy VNC authentication and unencrypted desktop/input/clipboard transport. It is targeted only at a deliberately selected trusted private IPv4 LAN. It must not be exposed to the internet. A working prototype and package checks do not establish production readiness or a security audit.
-
-See `RELEASE_SCOPE.md` for the exact target and remaining acceptance gates, and `sources.json` for source commits and archive hashes. Retained licenses are installed under `/usr/share/licenses/mac-native-screenshare/`. Substantial AI assistance was used; upstream endorsement and human audit are not implied.
+See RELEASE_SCOPE.md for targets and acceptance gates, and sources.json for exact commits/archive hashes. Licenses are under `/usr/share/licenses/mac-native-screenshare/`. Substantial AI assistance was used; upstream endorsement, human audit, and production readiness are not implied.

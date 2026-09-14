@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "package": "mac-native-screenshare",
-  "version": "0.1.0alpha1",
+  "version": "0.1.0alpha2",
   "release": 1,
-  "source_date_epoch": 1789351298,
+  "source_date_epoch": 1789355188,
   "sources": [
     {
       "name": "integration",
       "directory": "mac-native-screenshare",
       "prefix": "integration",
       "repository": "https://github.com/LoFenk/mac-native-screenshare.git",
-      "commit": "bd9e87ed685bc8f369ed8486bfc5ccc30e702e12",
-      "archive": "integration-bd9e87ed685bc8f369ed8486bfc5ccc30e702e12.tar.gz",
-      "sha256": "93bf3902c63edd2d604d5dae35891b80f8282977a511a16b0fbbfeb3bd2cd03a"
+      "commit": "6136589c61daaad32b83b19a1679d0f6d648e353",
+      "archive": "integration-6136589c61daaad32b83b19a1679d0f6d648e353.tar.gz",
+      "sha256": "3faf7f372a83fff05a75f68217e1b9c62de63a9a52ef065c2d0ff418a8f67cdf"
     },
     {
       "name": "neatvnc",

@@ -8,7 +8,7 @@ An independent, experimental add-on project for using the Mac's built-in Screen 
 
 | Repository | Role | Branch |
 | --- | --- | --- |
-| [mac-native-screenshare](https://github.com/LoFenk/mac-native-screenshare) | Standalone integration, build recipe, tests, and future packaging | `main` |
+| [mac-native-screenshare](https://github.com/LoFenk/mac-native-screenshare) | Standalone integration, package recipe, tests, and documentation | `main` |
 | [neatvnc-native-screen-sharing](https://github.com/LoFenk/neatvnc-native-screen-sharing) | Modified NeatVNC with opt-in Apple text clipboard support | `native-screen-sharing` |
 | [wayvnc-native-screen-sharing](https://github.com/LoFenk/wayvnc-native-screen-sharing) | Modified WayVNC with clipboard teardown, keyboard, pointer, and display-switch fixes | `native-screen-sharing` |
 | [omarchy-native-screen-sharing](https://github.com/LoFenk/omarchy-native-screen-sharing) | Historical backup of the original Omarchy integration checkpoint | `native-screen-sharing` |
@@ -44,7 +44,7 @@ bash mac-native-screenshare/build.sh "$PWD"
 
 The recipe checks the two dependency commit IDs and clean working trees, builds privately, runs the existing automated checks, and stages binaries with SHA256 hashes under `build/mac-native-screenshare/stage/`. An optional second argument selects a different build directory. Use a fresh build directory when changing source checkout locations; Meson records absolute source paths.
 
-The build does not install software, start sharing, edit desktop configuration, or open firewall ports. Its staged files are inputs for future packaging, not a relocatable release package. It uses `/usr/bin/python3` for integration checks so a Meson virtual environment cannot hide system desktop bindings; `OMARCHY_SHARE_PYTHON` can select another interpreter with those bindings.
+The build does not install software, start sharing, edit desktop configuration, or open firewall ports. Its staged files are development components; use the Arch recipe for a relocatable package. It uses `/usr/bin/python3` for integration checks so a Meson virtual environment cannot hide system desktop bindings; `OMARCHY_SHARE_PYTHON` can select another interpreter with those bindings.
 
 ## Integration sources
 
