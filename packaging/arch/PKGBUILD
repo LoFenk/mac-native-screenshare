@@ -1,0 +1,105 @@
+# Maintainer: Paul Stoica
+# Independent AI-assisted developer preview; setup/lifecycle are not enabled.
+pkgname=mac-native-screenshare
+pkgver=0.1.0alpha1
+pkgrel=1
+pkgdesc='Experimental native Mac Screen Sharing components for Omarchy (setup pending)'
+arch=('x86_64')
+url='https://github.com/LoFenk/mac-native-screenshare'
+license=('MIT' 'ISC')
+depends=(
+  'bash' 'coreutils' 'glibc>=2.44'
+  'aml>=1.0.0' 'aml<2.0.0' 'pixman' 'libjpeg-turbo' 'gnutls'
+  'nettle>=4.0' 'nettle<5.0' 'libnettle.so' 'libhogweed.so' 'gmp' 'zlib'
+  'wayland' 'jansson' 'libxkbcommon'
+  'python' 'python-dbus' 'python-gobject' 'openssl'
+  'networkmanager' 'avahi' 'systemd'
+  'omarchy>=4.0.3' 'omarchy<4.1' 'hyprland>=0.56.2' 'hyprland<0.57'
+)
+makedepends=('meson>=1.12.0' 'ninja' 'pkgconf' 'libdrm')
+checkdepends=('lua')
+# Keep normal Arch hardening; avoid a separate debug artifact and LTO in this preview.
+options=('!debug' '!lto')
+source=(
+  'integration-bd9e87ed685bc8f369ed8486bfc5ccc30e702e12.tar.gz'
+  'neatvnc-458553ce35b8828f9973b20f36fe3fc8460b45ab.tar.gz'
+  'wayvnc-5c2fc1356d84c192d23481fa526fee30ca749ac8.tar.gz'
+  'wayvnc-private-rpath.patch'
+  'sources.json'
+  'README-PACKAGE.md'
+  'verify-package.py'
+)
+sha256sums=(
+  '93bf3902c63edd2d604d5dae35891b80f8282977a511a16b0fbbfeb3bd2cd03a'
+  'adeaa1d9a9a7baee686b9ab28c526f8faff7aaa5a472ce21102c229f30aefc1b'
+  '34e3235373255dd43afc93d1983198bb37a63ee6ad461b16fc846febdc6ffefe'
+  '8c3e05e3f257cee878a520d9631c5d2c6e1baa330b50a889a6a5fc2765bbbc14'
+  '8f0583b5a6f6ddb4dd1fbef8f1106281d91916bf7b7286904abefdc95c1ab5cc'
+  '5200ebacdd0e1be963065db88e3c7700a7e889bf56869a5990ccab3a938ffd3d'
+  '44e8ef5610c040ad3fcf711ff172e24e5f9425497ccbc7ab2886a38e1753f888'
+)
+export SOURCE_DATE_EPOCH=1789351298
+
+prepare() {
+  patch --directory="$srcdir/wayvnc" --strip=1 --input="$srcdir/wayvnc-private-rpath.patch"
+  /usr/bin/python3 - "$srcdir" <<'CHECK'
+import json
+from pathlib import Path
+import sys
+root = Path(sys.argv[1])
+lock = json.loads((root / 'integration/dependencies.json').read_text())
+spec = json.loads((root / 'sources.json').read_text())
+for item in spec['sources']:
+    if item['name'] in lock['repositories']:
+        assert item['commit'] == lock['repositories'][item['name']]['commit']
+assert (root / 'integration/VERSION').read_text().strip() == spec['version']
+CHECK
+}
+
+build() {
+  # Exported sources have no .git directory. Ignore unrelated parent repositories.
+  export GIT_CEILING_DIRECTORIES="$srcdir"
+  export PYTHONDONTWRITEBYTECODE=1
+  meson setup "$srcdir/build-neatvnc" "$srcdir/neatvnc" \
+    --prefix=/usr/lib/mac-native-screenshare --libdir=lib --bindir=bin \
+    --buildtype=debugoptimized --wrap-mode=nofallback \
+    -Dtests=true -Dexamples=false -Djpeg=enabled -Dh264=disabled -Dgbm=disabled \
+    -Dnettle=enabled -Dtls=enabled
+  meson compile -C "$srcdir/build-neatvnc" -j2
+  PKG_CONFIG_PATH="$srcdir/build-neatvnc/meson-uninstalled" \
+    meson setup "$srcdir/build-wayvnc" "$srcdir/wayvnc" \
+      --prefix=/usr/lib/mac-native-screenshare --libdir=lib --bindir=bin \
+      --buildtype=debugoptimized --wrap-mode=nofallback \
+      -Dtests=true -Dman-pages=disabled -Dscreencopy-dmabuf=disabled -Dpam=disabled
+  meson compile -C "$srcdir/build-wayvnc" -j2
+}
+
+check() {
+  export PYTHONDONTWRITEBYTECODE=1
+  meson test -C "$srcdir/build-neatvnc" --print-errorlogs
+  LD_LIBRARY_PATH="$srcdir/build-neatvnc" \
+    meson test -C "$srcdir/build-wayvnc" --print-errorlogs
+  /usr/bin/python3 "$srcdir/integration/test.py"
+  lua "$srcdir/integration/test-mac-shortcuts.lua" "$srcdir/integration/mac-shortcuts.lua"
+  bash -n "$srcdir/integration/run.sh" "$srcdir/integration/mac-shortcuts.sh"
+}
+
+package() {
+  # Meson installation removes build RPATHs and applies the private install RPATH.
+  DESTDIR="$pkgdir" meson install -C "$srcdir/build-neatvnc" --no-rebuild --tags runtime
+  DESTDIR="$pkgdir" meson install -C "$srcdir/build-wayvnc" --no-rebuild --tags runtime
+  local _runtime="$pkgdir/usr/lib/$pkgname"
+  local _docs="$pkgdir/usr/share/doc/$pkgname"
+  local _licenses="$pkgdir/usr/share/licenses/$pkgname"
+  for _file in run.sh publish.py probe.py mac-shortcuts.lua mac-shortcuts.sh virtual-display.py; do
+    install -Dm644 "$srcdir/integration/$_file" "$_runtime/$_file"
+  done
+  install -Dm644 "$srcdir/README-PACKAGE.md" "$_docs/README.md"
+  install -Dm644 "$srcdir/integration/docs/RELEASE_SCOPE.md" "$_docs/RELEASE_SCOPE.md"
+  install -Dm644 "$srcdir/integration/ACKNOWLEDGEMENTS.md" "$_docs/ACKNOWLEDGEMENTS.md"
+  install -Dm644 "$srcdir/sources.json" "$_docs/sources.json"
+  install -Dm644 "$srcdir/integration/LICENSE" "$_licenses/LICENSE"
+  install -Dm644 "$srcdir/neatvnc/COPYING" "$_licenses/neatvnc-COPYING"
+  install -Dm644 "$srcdir/wayvnc/COPYING" "$_licenses/wayvnc-COPYING"
+  /usr/bin/python3 "$srcdir/verify-package.py" --root "$pkgdir"
+}

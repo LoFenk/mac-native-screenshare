@@ -17,3 +17,7 @@ On September 13, 2026, a fresh temporary workspace containing only this standalo
 The build used the existing Meson/Ninja tools on this development host and staged server, control client, and library outputs with SHA256 hashes. It is a clean source build, not a hermetic build or a relocatable package. The compiler reported warnings in unchanged upstream authentication and coordinate-transform code; this check does not constitute a security audit.
 
 Live desktop diagnostics were excluded. No service was started against the active desktop and no user configuration, firewall, or installed package was changed.
+
+## Arch package preview
+
+Steps 2 and 3 are recorded in [the release scope](docs/RELEASE_SCOPE.md), [packaging instructions](docs/PACKAGING.md), and [package validation](packaging/arch/VALIDATION.md). The latter covers the makepkg build, final archive, dependency isolation, and temporary-root installation/removal. It does not extend the original Mac-client runtime acceptance to the packaged deployment.

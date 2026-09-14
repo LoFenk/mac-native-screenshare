@@ -2,7 +2,7 @@
 
 An independent, experimental add-on project for using the Mac's built-in Screen Sharing client with an Omarchy desktop: Finder discovery, text clipboard in both directions, Mac keyboard shortcuts, and display sizing.
 
-**Status: experimental developer preview, 0.1.0 alpha 1. Arch packaging is being prepared; setup and service lifecycle remain unfinished.** The working prototype has been tested on one Omarchy host and one Mac. The standalone sources need packaging and another machine's acceptance testing before release.
+**Status: experimental developer preview, 0.1.0 alpha 1. An Arch package recipe is available; setup and service lifecycle remain unfinished.** The working prototype has been tested on one Omarchy host and one Mac. The package still needs setup, service lifecycle, and another machine's acceptance testing before release.
 
 ## Repositories
 
@@ -18,6 +18,10 @@ These repositories are private backups during development. The standalone build 
 This is a community project, independently maintained from Omarchy, WayVNC, NeatVNC, and Apple. AI assistance was used to research and implement the prototype and prepare these repositories. Original upstream authorship and licenses are retained; see [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md).
 
 See [the first release scope](docs/RELEASE_SCOPE.md) for the target environment, feature boundaries, network limitations, and release gates.
+
+## Build an Arch package
+
+See [docs/PACKAGING.md](docs/PACKAGING.md) for the checksum-locked recipe, offline source preparation, installed file layout, and package checks, and [the validation record](packaging/arch/VALIDATION.md) for the completed build and isolated installation/removal tests. The package installs inert software components; it does not enable screen sharing. A supported setup command, service lifecycle, and second-host acceptance remain future work.
 
 ## Build the source checkpoint
 

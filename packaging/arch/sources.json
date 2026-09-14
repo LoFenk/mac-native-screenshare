@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "package": "mac-native-screenshare",
+  "version": "0.1.0alpha1",
+  "release": 1,
+  "source_date_epoch": 1789351298,
+  "sources": [
+    {
+      "name": "integration",
+      "directory": "mac-native-screenshare",
+      "prefix": "integration",
+      "repository": "https://github.com/LoFenk/mac-native-screenshare.git",
+      "commit": "bd9e87ed685bc8f369ed8486bfc5ccc30e702e12",
+      "archive": "integration-bd9e87ed685bc8f369ed8486bfc5ccc30e702e12.tar.gz",
+      "sha256": "93bf3902c63edd2d604d5dae35891b80f8282977a511a16b0fbbfeb3bd2cd03a"
+    },
+    {
+      "name": "neatvnc",
+      "directory": "neatvnc",
+      "prefix": "neatvnc",
+      "repository": "https://github.com/LoFenk/neatvnc-native-screen-sharing.git",
+      "commit": "458553ce35b8828f9973b20f36fe3fc8460b45ab",
+      "archive": "neatvnc-458553ce35b8828f9973b20f36fe3fc8460b45ab.tar.gz",
+      "sha256": "adeaa1d9a9a7baee686b9ab28c526f8faff7aaa5a472ce21102c229f30aefc1b"
+    },
+    {
+      "name": "wayvnc",
+      "directory": "wayvnc",
+      "prefix": "wayvnc",
+      "repository": "https://github.com/LoFenk/wayvnc-native-screen-sharing.git",
+      "commit": "5c2fc1356d84c192d23481fa526fee30ca749ac8",
+      "archive": "wayvnc-5c2fc1356d84c192d23481fa526fee30ca749ac8.tar.gz",
+      "sha256": "34e3235373255dd43afc93d1983198bb37a63ee6ad461b16fc846febdc6ffefe"
+    }
+  ]
+}
