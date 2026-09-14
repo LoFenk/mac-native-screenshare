@@ -19,8 +19,7 @@ if [[ $mode != "encrypted" && $mode != "legacy" ]]; then
   echo "Unknown authentication mode; refusing to start." >&2
   exit 2
 fi
-: "${OMARCHY_PATH:?Point to the Omarchy integration checkout}"
-lab_dir="$OMARCHY_PATH/extras/native-screen-sharing"
+lab_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 wayvnc_command=(wayvnc)
 case "${OMARCHY_NATIVE_CLIPBOARD:-0}" in
   0) ;;

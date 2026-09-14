@@ -3,11 +3,11 @@
 set -euo pipefail
 export PYTHONDONTWRITEBYTECODE=1
 
-workspace="${1:?Usage: bash build.sh <three-repository-workspace> [build-directory]}"
+workspace="${1:?Usage: bash build.sh <workspace-with-neatvnc-and-wayvnc> [build-directory]}"
 workspace="$(realpath -- "$workspace")"
-build_root="${2:-$workspace/build}"
+build_root="${2:-$workspace/build/mac-native-screenshare}"
 build_root="$(realpath -m -- "$build_root")"
-source_root="$workspace/omarchy/extras/native-screen-sharing"
+source_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 integration_python="${OMARCHY_SHARE_PYTHON:-/usr/bin/python3}"
 "$integration_python" -c 'import dbus; from gi.repository import GLib, GLibUnix'
 

@@ -1,2 +1,13 @@
 __pycache__/
 native-clipboard/
+build/
+dist/
+.venv/
+.env
+.env.*
+credentials/
+*.key
+*.pem
+*.log
+*.pcap
+*.pcapng

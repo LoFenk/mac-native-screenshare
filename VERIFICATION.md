@@ -1,11 +1,19 @@
-# Source checkpoint verification — September 13, 2026
+# Verification record
 
-The NeatVNC and WayVNC branches were reconstructed from the accepted split patches and subsequent keyboard/display deltas. Every changed source file matches the running prototype's source byte for byte: 16 NeatVNC files and six WayVNC files. The existing Nettle 4 prerequisite commits were cherry-picked with their original authors and source commit references.
+## Original source checkpoint
 
-A new build directory compiled both branches successfully with GCC 16.2.1, Meson 1.12.0, and Ninja 1.13.2. The complete build.sh path then passed all four NeatVNC suites, all three WayVNC suites, 13 integration unit checks, Lua Command/Option-Up checks, and shell syntax checks. Staged server, control client, and library artifacts have SHA256 hashes. This is a source recipe with recorded dependencies, not a hermetic or bit-identical build claim.
+The [original verification record](docs/checkpoint/VERIFICATION.md) reports a fresh build of the pinned NeatVNC and WayVNC sources with all four NeatVNC suites, three WayVNC suites, 13 integration unit checks, Lua shortcut checks, and shell syntax checks passing. It separately records the original host's Mac-client acceptance.
 
-The integration copy was checked for Python syntax and known private host identifiers. Explicit environment inputs replace the original physical connector, dimensions, test credential path, and fixed user runtime directory. run.sh uses OMARCHY_PATH for its source directory. Those parameterized runtime paths and the eventual installer still need a separate desktop acceptance test; the source-preparation step did not run them against the active session.
+Those results describe the checkpoint before standalone extraction. They do not establish installer, reboot, removal, or second-machine support.
 
-The build initially exposed the Meson virtual environment hiding system Python D-Bus bindings. The recipe now explicitly selects the system interpreter for integration checks and verifies those bindings before compiling. The successful final run exercised that correction.
+## Standalone extraction
 
-Original-host native acceptance remains documented separately from the fresh build: Finder discovery, automatic text clipboard both ways, visible pointer, tested Mac shortcuts, and full-screen sizing through a virtual output. No new sharing service, firewall rule, user configuration, or installation was activated by this source-preparation step. Nothing has been pushed or submitted upstream.
+The first repository commit preserves all 15 integration files byte for byte from Omarchy commit `b807f14b8ec03d95cc141df3fe160d7e863f47c6`. Original SHA256 hashes are recorded in [docs/checkpoint/extraction.json](docs/checkpoint/extraction.json). The Omarchy MIT license and original workspace manifest are also retained.
+
+The standalone adaptation changes only source-directory lookup in `build.sh` and `run.sh`, the default build-output directory, dependency repository URLs, ignore rules, and documentation. The VNC source commits and other runtime scripts retain their checkpoint contents. A build no longer requires an Omarchy source checkout.
+
+On September 13, 2026, a fresh temporary workspace containing only this standalone integration and local clones of the two pinned dependencies completed the entire build recipe. There was no Omarchy source checkout in that workspace. All four NeatVNC suites, three WayVNC suites, 13 integration unit checks, Lua shortcut checks, and shell syntax checks passed. Python source syntax, initial-import hashes, dependency pins, preserved license content, and local documentation links were also checked.
+
+The build used the existing Meson/Ninja tools on this development host and staged server, control client, and library outputs with SHA256 hashes. It is a clean source build, not a hermetic build or a relocatable package. The compiler reported warnings in unchanged upstream authentication and coordinate-transform code; this check does not constitute a security audit.
+
+Live desktop diagnostics were excluded. No service was started against the active desktop and no user configuration, firewall, or installed package was changed.

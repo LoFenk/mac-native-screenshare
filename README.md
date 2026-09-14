@@ -1,35 +1,61 @@
-# Native Mac screen sharing source checkpoint
+# Mac Native Screenshare
 
-This directory preserves the integration sources for the tested Finder → Network → Omarchy → Share Screen workflow. It accompanies the pinned NeatVNC and WayVNC branches listed in dependencies.json. It is the starting point for a test package; installation and durable service ownership are not implemented yet. Nothing here is enabled by checking out or building this branch.
+An independent, experimental add-on project for using the Mac's built-in Screen Sharing client with an Omarchy desktop: Finder discovery, text clipboard in both directions, Mac keyboard shortcuts, and display sizing.
 
-## Sources
+**Status: source checkpoint. There is no installable package or supported installer yet.** The working prototype has been tested on one Omarchy host and one Mac. The standalone sources need packaging and another machine's acceptance testing before release.
 
-- run.sh supervises the private server and interface-scoped Bonjour publisher. OMARCHY_PATH must point to this integration checkout. Its native branch expects private binaries under this directory's ignored native-clipboard/ directory; build/stage is the package builder's input, not an installed runtime location.
-- publish.py advertises the approved interface/address and stops when the chosen network profile or address changes.
-- mac-shortcuts.lua and mac-shortcuts.sh preserve the accepted device-scoped Command translations and narrow Option + Up behavior. Installation still needs a managed, removable Lua hook before Omarchy's default bindings load.
-- virtual-display.py preserves the runtime larger-output trial, with the physical connector and requested size supplied through OMARCHY_SHARE_PHYSICAL_OUTPUT, OMARCHY_SHARE_WIDTH, and OMARCHY_SHARE_HEIGHT. It requires a single unmirrored physical output at scale 1 and position 0,0. These parameterized inputs have not yet been accepted on a second desktop. Its guardian must be bound to the sharing service, as described below.
-- probe.py, test.py, test-mac-shortcuts.lua, check-native-frame.py, and test-output-switch.py preserve protocol, network, shortcut, and real-frame checks. Real desktop tests require explicit invocation; they are not run by build.sh.
+## Repositories
 
-The NeatVNC tree owns Apple protocol code and its synthetic wire tests. The WayVNC tree owns clipboard teardown, pointer overlay, held-modifier handling, and output-switch fixes. Existing upstream Nettle 4 prerequisites retain their original authors and cherry-pick provenance.
+| Repository | Role | Branch |
+| --- | --- | --- |
+| [mac-native-screenshare](https://github.com/LoFenk/mac-native-screenshare) | Standalone integration, build recipe, tests, and future packaging | `main` |
+| [neatvnc-native-screen-sharing](https://github.com/LoFenk/neatvnc-native-screen-sharing) | Modified NeatVNC with opt-in Apple text clipboard support | `native-screen-sharing` |
+| [wayvnc-native-screen-sharing](https://github.com/LoFenk/wayvnc-native-screen-sharing) | Modified WayVNC with clipboard teardown, keyboard, pointer, and display-switch fixes | `native-screen-sharing` |
+| [omarchy-native-screen-sharing](https://github.com/LoFenk/omarchy-native-screen-sharing) | Historical backup of the original Omarchy integration checkpoint | `native-screen-sharing` |
 
-## Private build
+These repositories are private backups during development. The standalone build needs only the first three repositories. [dependencies.json](dependencies.json) records the exact modified dependency commits and their upstream bases. [docs/RECOVERY.md](docs/RECOVERY.md) explains how to restore the workspace.
 
-Arrange sibling omarchy/, neatvnc/, and wayvnc/ checkouts at the pinned commits. Use Meson 1.12.0 and Ninja 1.13.2 on PATH, plus the documented system development dependencies: AML, Wayland client, pixman, TurboJPEG, GnuTLS, Nettle/Hogweed 4, GMP, zlib, libdrm, jansson, and xkbcommon. Tests also need Python D-Bus/GObject bindings and Lua. These are the tested Arch/Nettle 4 sources; compatibility with other distributions is not established.
+This is a community project, independently maintained from Omarchy, WayVNC, NeatVNC, and Apple. AI assistance was used to research and implement the prototype and prepare these repositories. Original upstream authorship and licenses are retained; see [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md).
 
-Run `bash omarchy/extras/native-screen-sharing/build.sh "$PWD"` from the parent workspace. The script verifies the dependency commit IDs and clean source trees, builds both libraries/server privately, runs their tests and the portable integration checks, and stages binaries with SHA256 hashes under build/stage/. It does not install packages, edit user configuration, start sharing, or open firewall ports. It does not install missing build dependencies automatically.
+## Build the source checkpoint
 
-The integration checks use /usr/bin/python3 so a virtual environment used for Meson does not hide system D-Bus/GObject bindings. Override OMARCHY_SHARE_PYTHON to choose another interpreter with those bindings.
+Arrange the repositories as follows; their local directory names matter to the dependency build recipe:
 
-## Runtime contract to package
+```text
+workspace/
+├── mac-native-screenshare/
+├── neatvnc/
+└── wayvnc/
+```
 
-The accepted prototype runs under the graphical user session with its imported Wayland and compositor environment. The main service supplies a private systemd password credential and selected interface/address/profile/output arguments to run.sh. The keyboard unit follows the main service and owns its runtime marker. The optional virtual-display guardian follows the main service, stages its output, and activates only after capture is verified. It restores physical capture/workspaces, removes its output, and reloads the unchanged user configuration when stopped.
+The recorded build environment uses GCC 16.2.1, Meson 1.12.0, and Ninja 1.13.2. Development dependencies include AML, Wayland client, pixman, TurboJPEG, GnuTLS, Nettle/Hogweed 4, GMP, zlib, libdrm, jansson, and xkbcommon. Integration checks need Lua and Python D-Bus/GObject bindings. Meson and Ninja must be on `PATH`. Compatibility with other distributions and dependency versions remains unverified.
 
-The previous machine-specific service commands and credentials are deliberately absent. A package must implement fresh credential setup, selected-network access, service ordering, discovery identity, runtime paths, display selection, start/stop/restart, upgrade, and uninstall. The current native compatibility mode uses password-authenticated legacy VNC without encrypted desktop transport; supported network restrictions and that limitation must be explicit. No sample password should become an installed default.
+From the parent workspace, run:
 
-## Verified outcome and limits
+```bash
+bash mac-native-screenshare/build.sh "$PWD"
+```
 
-On the original Omarchy host, the native Mac user accepted Finder discovery, automatic text clipboard in both directions, normal pointer behavior, Option + Up, Command + Shift + workspace digits, a common-shortcut sweep, and full-screen sizing through a larger virtual output. The old output-switch implementation fails on the first isolated switch; the fix passes 20 alternating switches with full frames at both sizes.
+The recipe checks the two dependency commit IDs and clean working trees, builds privately, runs the existing automated checks, and stages binaries with SHA256 hashes under `build/mac-native-screenshare/stage/`. An optional second argument selects a different build directory. Use a fresh build directory when changing source checkout locations; Meson records absolute source paths.
 
-Changing a configuration file can clear runtime display rules. Reboot recovery, installation/removal, additional physical layouts and Mac versions, encrypted native transport, and upstream approval remain unfinished. The Omarchy remote plan favors Sunshine/Moonlight; native built-in Mac access is the separate requirement to discuss before adding a maintained server stack.
+The build does not install software, start sharing, edit desktop configuration, or open firewall ports. Its staged files are inputs for future packaging, not a relocatable release package. It uses `/usr/bin/python3` for integration checks so a Meson virtual environment cannot hide system desktop bindings; `OMARCHY_SHARE_PYTHON` can select another interpreter with those bindings.
 
-Raw logs, personal configuration snapshots, credentials, private addresses, downloaded Apple binaries, and build outputs are excluded from this source checkpoint.
+## Integration sources
+
+- `run.sh`, `publish.py`, and `probe.py`: prototype server supervision, network-scoped Finder discovery, and authentication checks. `run.sh` now locates helpers beside itself, without an Omarchy source checkout. Its native mode still expects development binaries in the ignored `native-clipboard/` directory.
+- `mac-shortcuts.lua` and `mac-shortcuts.sh`: remote-device keyboard mappings and prototype lifecycle control. Service names, runtime markers, and the removable Lua hook still need packaging work.
+- `virtual-display.py`: the larger virtual-output trial. It takes explicit output and size inputs and currently assumes one unmirrored physical output at scale 1 and position 0,0.
+- `test.py` and `test-mac-shortcuts.lua`: automated checks that do not change the desktop.
+- `check-native-frame.py` and `test-output-switch.py`: explicit live-session diagnostics. They are not part of the build and must only be run against an intentionally configured test session.
+
+The existing `OMARCHY_SHARE_*` and `OMARCHY_NATIVE_CLIPBOARD` environment names are retained for source continuity. These prototype scripts are not installation instructions. [docs/ROADMAP.md](docs/ROADMAP.md) records the remaining package and service work.
+
+## Tested behavior and limits
+
+The original host's native-client tests covered Finder discovery, automatic text clipboard both ways, pointer rendering, Option + Up, Command + Shift + workspace digits, other common shortcuts, and full-screen sizing. [VERIFICATION.md](VERIFICATION.md) distinguishes those historical results from standalone source checks.
+
+The native compatibility path currently uses password-authenticated legacy VNC with **unencrypted desktop transport**. Packaging must make that limitation explicit and constrain network access appropriately. Installation, persistent service ownership, reboot recovery, upgrades, removal, other display layouts, and additional Mac versions are unfinished. Neither a working prototype nor passing automated tests establishes production readiness.
+
+## License and provenance
+
+Integration sources are preserved under the [MIT license](LICENSE) from their Omarchy source checkpoint. NeatVNC and WayVNC keep their separate ISC licenses in their own repositories. [docs/checkpoint/extraction.json](docs/checkpoint/extraction.json) records the original integration commit and file hashes; the first commit of this repository preserves those imported files byte for byte.
