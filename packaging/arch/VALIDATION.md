@@ -1,3 +1,34 @@
+# 0.1.0alpha2-3 scale-2 fix and validation
+
+Validated September 14, 2026. This public experimental prerelease fixes setup/start rejection for a single physical display at scale 2. Physical capture leaves the monitor scale alone. Virtual-display staging and mirror rules retain the physical scale, use its logical width for temporary positioning, and restore the saved scale before removing the virtual output. The optional virtual output remains at scale 1. Fractional scaling remains outside the preview.
+
+## Sources and authorship
+
+Integration source: `2a6c513d69aaa9441f6538d13e9c82a3288ed326`. WayVNC and NeatVNC pins are unchanged from revision 2. The complete source bundle contains all three snapshots and the outer rebuild recipe; `sources.json` records their hashes. The release tag identifies the subsequent packaging commit.
+
+Project contact: Paul Stoica <paul@totallynormal.io>. Project-specific implementation, tests, packaging, and documentation were produced using OpenAI Codex at Paul's direction. The Git identity does not imply manual authorship or independent code review. Upstream authors retain credit. The complete bundled license notices are unchanged and accompany the binary and source bundle.
+
+## Completed checks
+
+- Full two-job build in the network-disabled, isolated build root with a generic builder account and `/work` directory.
+- Four NeatVNC suites, three WayVNC suites, 13 integration tests, 31 lifecycle tests, five package transaction tests, Lua shortcut/hook checks, and two real detached-WayVNC supervisor tests passed.
+- Five new display tests cover physical start/guard at scales 1 and 2, rejection of unsupported layouts before mutation, continued guard enforcement, virtual staging/mirroring/recovery at both scales, and retaining scale 2 in a failed-start recovery journal. Generated monitor rules execute in Lua and their scale, position, mode, and mirror fields are checked.
+- Compressed binary verification passed: private file layout, permissions, complete licenses, pinned provenance, disabled startup, scoped transaction hooks, private RUNPATH, bundled library resolution, CLI/binary smoke checks, and no stock VNC file overlap.
+- A temporary pacman root upgraded `0.1.0alpha2-2` to `0.1.0alpha2-3`, verified the installed files, and removed the package without residual files or a database entry. The full declared runtime dependencies resolve on the development host. Transaction hooks are simulated separately; the temporary root masks them because it has no desktop user managers.
+- The complete source bundle passed offline input checksum verification. Its outer PKGBUILD hash matches the binary's `.BUILDINFO`. The packaged display code is byte-identical to the pinned integration snapshot and reviewed working source.
+- `.BUILDINFO` retains the approved contact, generic build paths, and 173 selected package records. Expanded binary and source artifacts contain no personal home-directory paths.
+- Gitleaks scanned reachable integration Git history and the expanded binary/source artifacts, including nested source archives. Its eight findings were reviewed: the VNC configuration expression `password=` concatenated with a runtime variable, and xxHash SIMD variable assignments. None contained a credential.
+
+## Environment and acceptance limits
+
+The existing isolated root was reused with a fresh build workspace. It contains selected installed package-owned `/usr` files, generic configuration, and the package records described in `build-environment.json`. It had no host home directory, live desktop/session sockets, machine credentials, or network access. Meson 1.12.0 and Ninja 1.13.2 were external tools, recorded separately from the package inventory. Build dependencies and those tool versions were checked before `makepkg --nodeps`.
+
+This is an isolated build from selected host package files, not a fresh-package clean chroot or a bit-identical reproducibility claim. Existing upstream compiler warnings remain. Desktop, NetworkManager, Avahi, and transaction operations are simulated in lifecycle tests. Real Mac capture at scale 2, pointer/click alignment, virtual mirroring, clipboard/shortcuts, graphical login/reboot, and active desktop upgrade/removal still need acceptance on the second machine. These automated tests do not constitute an independent security audit.
+
+This remains an unsigned preview with unencrypted native VNC transport confined to the selected trusted private LAN. No package was installed on the active development desktop; its existing lab service and desktop configuration were not changed.
+
+---
+
 # 0.1.0alpha2-2 publication preparation and validation
 
 Validated September 14, 2026. This package revision preserves alpha 2 runtime behavior, adds the complete bundled-code notices, uses the approved project contact, and removes personal workstation metadata from the build artifacts. It remains an unsigned experimental preview. Installation leaves sharing disabled; second-machine/Mac and live desktop acceptance remain pending.
