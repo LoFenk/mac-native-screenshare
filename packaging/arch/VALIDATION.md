@@ -1,3 +1,38 @@
+# 0.1.0alpha2-4 display menu and firewall confirmation
+
+Validated September 14, 2026. This experimental prerelease adds a terminal display menu, instructions that can be shown/hidden, and explicit confirmation before applying a scoped UFW rule. Installation remains inert; setup and sharing remain user actions.
+
+## Behavior and sources
+
+`mac-native-screenshare display` offers the normal desktop, three temporary-size presets, and a custom resolution. The guide explains normal Omarchy display settings, Mac viewer scaling, and temporary desktops. Reading or hiding the guide does not change settings or hold the command lock. Display changes require confirmation; an active share is restarted and the Mac briefly disconnects. Stopped sharing stays stopped. Credentials, other settings, and login startup are preserved. Failed restarts restore the prior choice when cleanup succeeds; incomplete cleanup retains recovery state and reports the required actions.
+
+Interactive setup shows the scoped UFW rule and asks before applying it through sudo. The default is no. `firewall --apply` offers the same confirmation for existing installations. Plain `firewall`, noninteractive setup, and `setup --skip-firewall` only print guidance. Confirmation is independent of sudo credential caching, only UFW is elevated, and its terminal is inherited for authentication. Cancelling or failing sudo retains completed setup. UFW enablement, other rules, and administrator rule removal remain separately managed.
+
+Integration source: `f39102f3ccc0bed08a4ebf4c9c3830606012022e`. WayVNC and NeatVNC pins are unchanged from revision 3. `sources.json` records the snapshots and archive hashes; the complete source bundle includes all three and the authoritative outer recipe. The release tag identifies the subsequent packaging commit.
+
+Project contact: Paul Stoica <paul@totallynormal.io>. Project-specific implementation, tests, packaging, and documentation were produced using OpenAI Codex at Paul's direction. His Git identity does not imply manual authorship or independent review. Upstream authors retain credit and the complete bundled license notices remain included.
+
+## Completed checks
+
+- Full two-job build in a fresh workspace within the existing isolated, network-disabled build root, using the generic builder account and `/work` directory.
+- Four NeatVNC suites, three WayVNC suites, 13 integration tests, 50 lifecycle tests, five package transaction tests, Lua shortcut/hook checks, and two real detached-WayVNC supervisor tests passed.
+- Nine new firewall tests cover confirmation after setup is saved, exact rule preview and invocation, decline/empty input/EOF/interrupt, missing tools, no terminal, explicit skip, sudo failure, changed addresses during consent, and read-only versus apply CLI behavior. Ten new display-menu tests cover guide toggling, presets/custom sizes, normal-mode restoration, cancellation, rejected sizes, active restart ordering, state preservation, failed restart rollback, failed cleanup, and guide access before setup without a terminal.
+- A real terminal session exercised opening the menu and showing/hiding the guide with temporary settings. It made no desktop or firewall changes. Display/service operations and sudo execution in the automated tests are simulated.
+- Compressed package verification passed for private file layout, permissions, licenses, pinned provenance, disabled startup, transaction hooks, private RUNPATH, bundled library resolution, CLI/binary smoke checks, and stock VNC coexistence. The installed guide and `firewall --help` are checked explicitly.
+- A temporary pacman root upgraded revision 3 to revision 4, verified the installed files, and removed the package without residual files or a database entry. Transaction hooks are simulated separately and masked in that temporary root. Declared runtime dependencies resolve on the development host; optional UFW 0.36.2-7 and sudo 1.9.17.p2-6 are available there.
+- The complete source bundle passed offline checksum verification, and its outer PKGBUILD hash matches the binary's `.BUILDINFO`. Packaged CLI and guide bytes match both the pinned snapshot and reviewed source. Generic build metadata contains no personal home paths; 173 selected package records are retained.
+- Gitleaks scanned reachable integration history and expanded binary/source artifacts including nested archives. The eight findings match the previously reviewed runtime-password concatenation expression and xxHash SIMD variable assignments; none contains a credential. Expanded artifacts contain no personal home-directory paths.
+
+## Environment and remaining acceptance
+
+The reused build root contains selected installed package-owned `/usr` files and generated generic configuration. It had no host home directory, live desktop sockets, credentials, or network access. Meson 1.12.0 and Ninja 1.13.2 are external tools, recorded separately from the package inventory in `build-environment.json`. Build dependency availability and those versions were checked before `makepkg --nodeps`. This is not a fresh-package clean chroot or a bit-identical reproducibility claim. Existing upstream compiler warnings remain.
+
+The user reported a working Mac connection to a second Omarchy host at physical scale 2 after applying the scoped firewall rule. Real virtual-display/menu restarts, the new sudo prompt on that host, clipboard/shortcuts, pointer accuracy, graphical reboot, and active package upgrade/removal acceptance remain pending. These checks do not constitute an independent security audit. The package remains unsigned and uses unencrypted native VNC on the selected trusted private LAN.
+
+No package was installed on the active development desktop. Its existing lab service, desktop settings, firewall, and credentials were not changed.
+
+---
+
 # 0.1.0alpha2-3 scale-2 fix and validation
 
 Validated September 14, 2026. This public experimental prerelease fixes setup/start rejection for a single physical display at scale 2. Physical capture leaves the monitor scale alone. Virtual-display staging and mirror rules retain the physical scale, use its logical width for temporary positioning, and restore the saved scale before removing the virtual output. The optional virtual output remains at scale 1. Fractional scaling remains outside the preview.
