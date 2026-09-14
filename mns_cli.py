@@ -100,7 +100,7 @@ def configure(paths, args):
         virtual = None
     name = args.name or (old and old['name']) or ('Mac Screenshare - ' + socket.gethostname().split('.')[0])[:63]
     config = validate_settings({'schema': SCHEMA, **network, 'output': output,
-              'port': args.port or (old and old['port']) or 5900,
+              'port': args.port if args.port is not None else old['port'] if old else 5900,
               'virtual': virtual, 'name': name,
               'hostname': old['hostname'] if old else 'mac-share-' + secrets.token_hex(5) + '.local',
               'transport': 'legacy-vnc', 'accepted_unencrypted': True})

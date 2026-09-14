@@ -2,6 +2,8 @@
 import asyncio
 import json
 import os
+from pathlib import Path
+import re
 import signal
 import socket
 import subprocess
@@ -16,8 +18,10 @@ GENERATED = ('wayvnc.conf', 'vnc.sock', 'control', 'endpoint.json', 'discovery-r
 
 
 def session_environment(paths):
+    if paths.runtime.parent != Path(f'/run/user/{os.getuid()}'):
+        raise Error('This preview requires the standard /run/user/UID graphical runtime directory.')
     for key in ('WAYLAND_DISPLAY', 'HYPRLAND_INSTANCE_SIGNATURE'):
-        if not os.environ.get(key):
+        if not re.fullmatch(r'[A-Za-z0-9_.-]+', os.environ.get(key, '')):
             raise Error('Run inside the logged-in Hyprland session.')
     if not (paths.runtime.parent / os.environ['WAYLAND_DISPLAY']).is_socket():
         raise Error('The Wayland display is unavailable.')

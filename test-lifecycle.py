@@ -84,6 +84,15 @@ class ConfigurationTests(Workspace):
         self.assertEqual(common.settings(self.paths)['port'], 5902)
         self.assertEqual(self.paths.hypr.read_text().count('BEGIN mac-native-screenshare keyboard'), 1)
 
+    def test_explicit_invalid_port_does_not_fall_back_to_default(self):
+        with self.assertRaises(common.Error):
+            self.configure(port=0)
+        self.assertFalse(self.paths.settings.exists())
+
+    def test_unexpected_runtime_path_is_rejected_before_socket_use(self):
+        with patch.dict(os.environ, self.env), self.assertRaises(common.Error):
+            session.session_environment(self.paths)
+
     def test_removal_preserves_later_edits_and_unrecognized_files(self):
         self.configure()
         self.paths.hypr.write_text(self.paths.hypr.read_text() + '-- added by user\n')
