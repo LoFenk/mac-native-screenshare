@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "checkpoint": "native-screen-sharing-source-2026-09-13",
+  "repositories": {
+    "omarchy": {
+      "upstream": "https://github.com/omacom/omarchy.git",
+      "base_commit": "31bd80daa4613ffdee995ac27467fce5a2990806",
+      "commit": "b807f14b8ec03d95cc141df3fe160d7e863f47c6",
+      "branch": "native-screen-sharing",
+      "changed_files": {
+        "extras/native-screen-sharing/.gitignore": "0fc60bc57dd34211acfcc4020a360082cdd2c5e587e2562c5786e3739a477cc5",
+        "extras/native-screen-sharing/README.md": "c00eee8423625a4d8186fbc7c9f3aaf806a725b3e2ce1815f7475ccd86fac574",
+        "extras/native-screen-sharing/VERIFICATION.md": "61454277bdc710e616fbab8fbe4ea5a4440b8057ec1270228116d24daa7cb6b4",
+        "extras/native-screen-sharing/build.sh": "45b0cc9197c4237ae3686288da42e418b393328ec5c033984eee883bb625bfbe",
+        "extras/native-screen-sharing/check-native-frame.py": "ed121ba93641c372a5c52c71d9369333f2cfdba0724c0b1789309ef5da10245f",
+        "extras/native-screen-sharing/dependencies.json": "446d835e7080d7b8d24d115b8fca861beb1a62ee0291a38b757599cd40e03ff5",
+        "extras/native-screen-sharing/mac-shortcuts.lua": "db09c0147c65b4f751c464cd2a29626dceb08c1ec40ee3f7909367d8517954e0",
+        "extras/native-screen-sharing/mac-shortcuts.sh": "0b93907a8322372dc3a2c4268b738895f8333e5851f3f88cba411ae4ebad0734",
+        "extras/native-screen-sharing/probe.py": "ad9c92716955e5de489ffb5365a40bd1dc59018462c5c3b1981d721618e91e9a",
+        "extras/native-screen-sharing/publish.py": "f8fb3967a60437ffde790d62673179765fa93cb2c82b8b0cf1bc612432a82575",
+        "extras/native-screen-sharing/run.sh": "d7cc40297cebdc87c8b973e1c75cebf59344877a48e259444d40d8091dc71b63",
+        "extras/native-screen-sharing/test-mac-shortcuts.lua": "a0e19fa00dd7a898fb994791efc91f975af68ec95721469a45f71d5f0a033085",
+        "extras/native-screen-sharing/test-output-switch.py": "72d59096d49a9189f4fafe1e3e544937cb86d1a3c723e34d03d48d0dbaefb5e0",
+        "extras/native-screen-sharing/test.py": "6ea7de2b8e6f9c962f371396cbc9fed21398f1c81c8919d28603e28fa7889565",
+        "extras/native-screen-sharing/virtual-display.py": "81853d8be85dec5323c47a5e3d3caeda5fdfe71709bca7919345a7bb5a4b3da7",
+        "plans/native-screen-sharing.md": "e1c5378984da5b470462c520df7379fa6914a6b1877270f6577515acb8ee4acf"
+      }
+    },
+    "neatvnc": {
+      "upstream": "https://github.com/any1/neatvnc.git",
+      "base_commit": "4d6d09b544d84b836cf1906735354b4e694a0c1c",
+      "commit": "458553ce35b8828f9973b20f36fe3fc8460b45ab",
+      "branch": "native-screen-sharing",
+      "changed_files": {
+        "include/apple-clipboard.h": "005d480f191bb3f07aeb51a99e107756e020950a95fbdb555856bcd5f631f5a4",
+        "include/client.h": "97511d5ec86aa66a62a54c417a35a2ae10effad7eaa11d597142425dd7fd79b1",
+        "include/crypto.h": "fc445e29b464992b4de345ce752c4c00c125ef9e56205726a0f06cda3db3e5c8",
+        "include/server.h": "031d1476383b6b359eb1cff9ad3e9eddb367fa84bd106344ce01a35be3fab0de",
+        "meson.build": "27a9a58c50eab9891569478b4a0b27ef3eac2e1e0acdf15320fe3c3515a3d3c4",
+        "src/apple-clipboard.c": "0100684d6a17c20cb35016d967ef017ba36ab7982ae8b589249859af7d546854",
+        "src/auth/apple-dh.c": "6044fe76a9514e460474dcd63d2597907bbad3e91451fec1a0e98d5f9b0419df",
+        "src/auth/rsa-aes.c": "f005a2d34680befbdda407cf0a32824880ac1e531c86ba9038084acfcdce10d4",
+        "src/crypto/nettle/cipher.c": "5d6c1e30684ad218bbeb951bec279d296a509f684d5369aeefa8a10c7137e95b",
+        "src/crypto/nettle/hash.c": "b02ec2cd2d446826874b11086fd3aebb5db2a3a806d2b8765e9821b77f78c3ef",
+        "src/server.c": "8d91350394efcc15c1f7d3da34da85dff9c5a846eba2b878d89aa7680917bc19",
+        "src/stream/ws/handshake.c": "887fab4d365f4d12b9c013d1ccf8fd587df4a6e5f5ca1221b1f0fc93b64fadbf",
+        "test/meson.build": "a2388608200f08fffd5f2a7840f3c3aa0cab7938aae00072d554aa7bbcb28091",
+        "test/rfb-test-server.c": "3a3b6bd0e40b0c5c873ae885aa641bd07d0f3dba67dfb537be0e0cd2d326a5e0",
+        "test/test_apple_clipboard.py": "c1f705c3553717237fed7357352ff872518839bae632fa0533fa6e60cce833ed",
+        "test/test_rfb_handshake.py": "f029ab1603371f1e0c7f7cce9166acc1902a80bb727685c4ff4558c53043321e"
+      }
+    },
+    "wayvnc": {
+      "upstream": "https://github.com/any1/wayvnc.git",
+      "base_commit": "ae53f076a83ad1ecd0d2adcaa063674a632bfe0f",
+      "commit": "5c2fc1356d84c192d23481fa526fee30ca749ac8",
+      "branch": "native-screen-sharing",
+      "changed_files": {
+        "include/data-control.h": "082126f67e1e37e64b766fb1b39ffc1be7e9f28a406975c85cf1d24a24287c68",
+        "src/data-control.c": "b21e6225f01def0dcdb7610671fdd4a7c84c1cd03251ee6c267e2443f9d0d6d7",
+        "src/keyboard.c": "f33ab73e727b2d426382e9335679923c4114bd3edd1d2faa128a621ddea402a0",
+        "src/main.c": "27dcc40285308a033dc5298d2a766eb8a1ed6eaa4aee3fb6fc46f3d70176adae",
+        "test/keyboard-test.c": "615923dc3e03120c0cd3aed5b0242b31f4acd40558c13f53bb27ee93740da1af",
+        "test/meson.build": "3c71e534f6ee8f47dd26abd7da073093862d865756750e1ec9e54ed49523f7ec"
+      }
+    }
+  }
+}

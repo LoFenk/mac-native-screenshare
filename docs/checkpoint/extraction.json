@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "source_repository": "https://github.com/omacom/omarchy.git",
+  "source_commit": "b807f14b8ec03d95cc141df3fe160d7e863f47c6",
+  "source_directory": "extras/native-screen-sharing",
+  "source_backup": "https://github.com/LoFenk/omarchy-native-screen-sharing",
+  "original_file_sha256": {
+    ".gitignore": "0fc60bc57dd34211acfcc4020a360082cdd2c5e587e2562c5786e3739a477cc5",
+    "README.md": "c00eee8423625a4d8186fbc7c9f3aaf806a725b3e2ce1815f7475ccd86fac574",
+    "VERIFICATION.md": "61454277bdc710e616fbab8fbe4ea5a4440b8057ec1270228116d24daa7cb6b4",
+    "build.sh": "45b0cc9197c4237ae3686288da42e418b393328ec5c033984eee883bb625bfbe",
+    "check-native-frame.py": "ed121ba93641c372a5c52c71d9369333f2cfdba0724c0b1789309ef5da10245f",
+    "dependencies.json": "446d835e7080d7b8d24d115b8fca861beb1a62ee0291a38b757599cd40e03ff5",
+    "mac-shortcuts.lua": "db09c0147c65b4f751c464cd2a29626dceb08c1ec40ee3f7909367d8517954e0",
+    "mac-shortcuts.sh": "0b93907a8322372dc3a2c4268b738895f8333e5851f3f88cba411ae4ebad0734",
+    "probe.py": "ad9c92716955e5de489ffb5365a40bd1dc59018462c5c3b1981d721618e91e9a",
+    "publish.py": "f8fb3967a60437ffde790d62673179765fa93cb2c82b8b0cf1bc612432a82575",
+    "run.sh": "d7cc40297cebdc87c8b973e1c75cebf59344877a48e259444d40d8091dc71b63",
+    "test-mac-shortcuts.lua": "a0e19fa00dd7a898fb994791efc91f975af68ec95721469a45f71d5f0a033085",
+    "test-output-switch.py": "72d59096d49a9189f4fafe1e3e544937cb86d1a3c723e34d03d48d0dbaefb5e0",
+    "test.py": "6ea7de2b8e6f9c962f371396cbc9fed21398f1c81c8919d28603e28fa7889565",
+    "virtual-display.py": "81853d8be85dec5323c47a5e3d3caeda5fdfe71709bca7919345a7bb5a4b3da7"
+  }
+}
