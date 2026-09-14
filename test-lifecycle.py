@@ -217,6 +217,112 @@ def ipaddress(value):
     return module.IPv4Interface(value)
 
 
+class DisplayTests(Workspace):
+    def test_physical_start_and_guard_accept_both_scales_without_monitor_rules(self):
+        for scale in (1, 2):
+            with self.subTest(scale=scale):
+                monitor = dict(MONITOR, scale=scale)
+                instance = desktop.Desktop(self.paths, self.env)
+                def query(kind):
+                    return {'id': 1} if kind == 'activeworkspace' else [{'id': 1}] if kind == 'workspaces' else [monitor]
+                with patch.object(instance, 'query', side_effect=query), \
+                     patch.object(instance, 'call', return_value=''), patch.object(instance, 'reload'), \
+                     patch.object(instance, 'evaluate') as evaluate:
+                    before = instance.begin(CONFIG)
+                    instance.guard(CONFIG)
+                self.assertEqual(before['monitor']['scale'], scale)
+                self.assertFalse(before['created'])
+                self.assertFalse(any('hl.monitor(' in call.args[0] for call in evaluate.call_args_list))
+                self.assertFalse((self.paths.runtime / 'display.lua').exists())
+
+    def test_unsupported_layouts_fail_before_start_mutates_files(self):
+        for change in ({'scale': 1.5}, {'scale': 3}, {'transform': 1}, {'x': 20},
+                       {'y': -20}, {'mirrorOf': 'HDMI-A-1'}, {'name': 'HDMI-A-1'}):
+            with self.subTest(change=change):
+                instance = desktop.Desktop(self.paths, self.env)
+                with patch.object(instance, 'query', return_value=[dict(MONITOR, **change)]), \
+                     patch.object(instance, 'call', side_effect=AssertionError('Must reject before mutations')):
+                    with self.assertRaises(common.Error):
+                        instance.begin(CONFIG)
+                self.assertFalse(self.paths.journal.exists())
+                self.assertFalse((self.paths.runtime / 'keyboard').exists())
+
+    def test_guard_still_rejects_fractional_scale_and_added_outputs(self):
+        instance = desktop.Desktop(self.paths, self.env)
+        for monitors in ([dict(MONITOR, scale=1.5)], [dict(MONITOR, scale=2), {'name': 'HDMI-A-1'}]):
+            with self.subTest(monitors=monitors), patch.object(instance, 'query', return_value=monitors):
+                with self.assertRaises(common.Error):
+                    instance.guard(CONFIG)
+
+    def test_virtual_start_reload_and_recovery_preserve_scale(self):
+        self.compositor_socket()
+        for scale in (1, 2):
+            with self.subTest(scale=scale):
+                # 4K physical panel at scale 2 occupies 1920 logical pixels.
+                panel = dict(MONITOR, width=3840, height=2160, scale=scale)
+                monitors = [panel]
+                config = dict(CONFIG, virtual=[1920, 1200])
+                instance = desktop.Desktop(self.paths, self.env)
+                rules = []
+                calls = []
+                def query(kind):
+                    if kind == 'activeworkspace':
+                        return {'id': 2}
+                    if kind == 'workspaces':
+                        return [{'id': n, 'monitor': desktop.VIRTUAL} for n in (1, 2)]
+                    return monitors
+                def call(*args):
+                    calls.append(args)
+                    if args == ('configerrors',):
+                        return ''
+                    if args[:2] == ('output', 'create'):
+                        monitors.append(dict(MONITOR, name=desktop.VIRTUAL, width=1920, height=1200))
+                    if args == ('output', 'remove', desktop.VIRTUAL):
+                        monitors[:] = [panel]
+                    if args[0] == 'eval' and args[1].startswith('hl.monitor('):
+                        rules.append(args[1])
+                    return 'ok'
+                with patch.object(instance, 'query', side_effect=query), patch.object(instance, 'call', side_effect=call), \
+                     patch.object(desktop.time, 'sleep'), patch.object(desktop, 'run') as control:
+                    before = instance.begin(config)
+                    instance.activate_virtual(before, self.paths.runtime / 'wayvnc.sock')
+                    script = (self.paths.runtime / 'display.lua').read_text()
+                    control.assert_called_once_with(common.ROOT / 'bin/wayvncctl', '-S', self.paths.runtime / 'wayvnc.sock', 'output-set', desktop.VIRTUAL)
+                    panel['mirrorOf'] = desktop.VIRTUAL
+                    instance.guard(config)
+                    instance.restore()
+                    instance.restore()  # Recovery is also safe to retry.
+
+                # Execute the generated rules as Lua and inspect what Hyprland receives.
+                capture = 'hl = {monitor = function(r) print(table.concat({r.output, r.mode, r.position, r.scale, r.mirror}, "|")) end}\n'
+                lua = subprocess.check_output(['lua', '-'], input=capture + '\n'.join(rules) + '\n' + script, text=True)
+                rows = [row.split('|') for row in lua.splitlines()]
+                physical = [r for r in rows if r[0] == 'eDP-1']
+                self.assertEqual([float(r[3]) for r in physical], [scale, scale, scale])
+                self.assertEqual([r[4] for r in physical], ['', '', desktop.VIRTUAL])
+                self.assertTrue(all(r[1:3] == ['3840x2160@60.000', '0x0'] for r in physical))
+                virtual = [r for r in rows if r[0] == desktop.VIRTUAL]
+                self.assertEqual([r[2] for r in virtual], [f'{3840 // scale}x0', '0x0'])
+                self.assertTrue(all(r[1] == '1920x1200@60' and float(r[3]) == 1 for r in virtual))
+                self.assertEqual(calls.count(('output', 'remove', desktop.VIRTUAL)), 1)
+                self.assertFalse(self.paths.journal.exists())
+                self.assertFalse((self.paths.runtime / 'display.lua').exists())
+                self.assertFalse((self.paths.runtime / 'keyboard').exists())
+
+    def test_failed_virtual_creation_retains_scale_two_for_recovery(self):
+        instance = desktop.Desktop(self.paths, self.env)
+        def query(kind):
+            return {'id': 1} if kind == 'activeworkspace' else [{'id': 1}] if kind == 'workspaces' else [dict(MONITOR, scale=2)]
+        def call(*args):
+            return '' if args == ('configerrors',) else 'creation failed' if args[:2] == ('output', 'create') else 'ok'
+        with patch.object(instance, 'query', side_effect=query), patch.object(instance, 'call', side_effect=call):
+            with self.assertRaisesRegex(common.Error, 'Could not create'):
+                instance.begin(dict(CONFIG, virtual=[1920, 1200]))
+        before = json.loads(common.read_private(self.paths.journal))
+        self.assertEqual(before['monitor']['scale'], 2)
+        self.assertTrue(before['created'])
+
+
 class RecoveryTests(Workspace):
     def test_old_login_journal_does_not_mutate_new_desktop(self):
         self.journal(created=True)

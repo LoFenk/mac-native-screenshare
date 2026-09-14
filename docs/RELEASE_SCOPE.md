@@ -1,6 +1,6 @@
 # First release scope: 0.1.0 alpha 2
 
-This is an experimental developer preview. Setup, service enablement, reboot ordering, and removal/recovery are implemented and covered by isolated tests. Installation leaves sharing disabled. A public release remains gated on a second machine's real desktop and Mac acceptance tests. See [USAGE.md](USAGE.md) for the controls and lifecycle limits.
+This is an experimental developer preview. Setup, service enablement, reboot ordering, and removal/recovery are implemented and covered by isolated tests. Installation leaves sharing disabled. This public prerelease is available for testing; a stable release remains gated on a second machine's real desktop and Mac acceptance tests. See [USAGE.md](USAGE.md) for the controls and lifecycle limits.
 
 ## Target environment
 
@@ -10,8 +10,10 @@ This is an experimental developer preview. Setup, service enablement, reboot ord
 | Desktop | Logged-in Hyprland session using the Omarchy Lua configuration; baseline Hyprland 0.56.2-2, initial target 0.56.x |
 | Client | Apple's built-in Screen Sharing on macOS Tahoe 26.x; the prototype user's reported version was 26.6.2, not independently inspected |
 | Network | One explicitly selected NetworkManager IPv4 connection on the same trusted private LAN as the Mac; local mDNS discovery must be available |
-| Displays | One physical output, initially unmirrored, at scale 1 and position 0,0; optional single virtual output for viewer sizing |
+| Displays | One physical output, initially unmirrored, at scale 1 or 2 and position 0,0; optional single scale-1 virtual output for viewer sizing |
 | Users | One Mac controlling the host user's existing desktop; no separate remote login or independent multiuser desktop |
+
+Package revision 3 adds scale-2 setup, physical capture guards, and scale preservation through virtual staging, mirroring, and recovery. The regression tests simulate the compositor and execute generated monitor rules in Lua; real scale-2 Mac capture and pointer accuracy remain unverified.
 
 These are release targets, not claims that every version in a range has been tested. Package dependencies bound the Omarchy and Hyprland versions to the initial target families. New host versions, other Macs, and other layouts need explicit compatibility testing.
 

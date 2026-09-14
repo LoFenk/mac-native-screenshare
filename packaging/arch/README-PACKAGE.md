@@ -1,6 +1,8 @@
 # Mac Native Screenshare developer package
 
-Version 0.1.0alpha2-2 is an experimental add-on for x86-64 Omarchy 4.0 / Hyprland 0.56. Setup and service lifecycle are implemented; real second-host/Mac acceptance remains pending.
+Version 0.1.0alpha2-3 is an experimental add-on for x86-64 Omarchy 4.0 / Hyprland 0.56. Setup and service lifecycle are implemented; real second-host/Mac acceptance remains pending.
+
+Revision 3 accepts physical monitor scale 1 or 2 and preserves it through virtual-display setup and recovery. Optional virtual outputs remain at scale 1. Keep your existing monitor scale and rerun `setup` if the previous revision rejected it.
 
 The package contains private modified WayVNC/NeatVNC components, a `mac-native-screenshare` command, a disabled user unit, and scoped cleanup hooks for upgrade/removal. It coexists with stock WayVNC/NeatVNC. Installing it does not start sharing, enable startup, create credentials, change desktop configuration, or alter firewall rules.
 
@@ -9,8 +11,8 @@ The package contains private modified WayVNC/NeatVNC components, a `mac-native-s
 On a supported host with the declared dependencies available:
 
 ```bash
-pacman -Qip ./mac-native-screenshare-0.1.0alpha2-2-x86_64.pkg.tar.zst
-sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-2-x86_64.pkg.tar.zst
+pacman -Qip ./mac-native-screenshare-0.1.0alpha2-3-x86_64.pkg.tar.zst
+sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-3-x86_64.pkg.tar.zst
 mac-native-screenshare setup
 mac-native-screenshare password
 mac-native-screenshare start

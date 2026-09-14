@@ -8,11 +8,11 @@ An independent, experimental add-on project for using the Mac's built-in Screen 
 
 ## Download and install
 
-Use the binary package and `SHA256SUMS` from the [alpha 2 revision 2 release](https://github.com/LoFenk/mac-native-screenshare/releases/tag/v0.1.0-alpha.2-r2). While the repository is private, downloads require an account with access. Once public, the same release page permits public downloads. Read the [usage guide](docs/USAGE.md) before configuring sharing.
+Use the binary package and `SHA256SUMS` from the [alpha 2 revision 3 release](https://github.com/LoFenk/mac-native-screenshare/releases/tag/v0.1.0-alpha.2-r3). Downloads are public. Read the [usage guide](docs/USAGE.md) before configuring sharing.
 
 ```bash
 sha256sum -c SHA256SUMS --ignore-missing
-sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-2-x86_64.pkg.tar.zst
+sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-3-x86_64.pkg.tar.zst
 ```
 
 The attached `.src.tar.gz` is the complete rebuildable source bundle, including the modified dependencies. It can be rebuilt without access to the separate dependency repositories. GitHub's automatically generated source archives are not that complete bundle. See [packaging instructions](docs/PACKAGING.md).

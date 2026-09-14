@@ -103,18 +103,25 @@ class Desktop:
         if len(monitors) != 1 or monitors[0]['name'] != output:
             raise Error('This preview requires exactly the selected physical output.')
         monitor = monitors[0]
-        if (monitor['scale'], monitor['x'], monitor['y']) != (1, 0, 0) or monitor.get('mirrorOf', 'none') != 'none' or monitor.get('transform', 0) != 0:
-            raise Error('The physical output must be unmirrored, unrotated, at scale 1 and position 0,0.')
+        if monitor['scale'] not in (1, 2) or (monitor['x'], monitor['y']) != (0, 0) or monitor.get('mirrorOf', 'none') != 'none' or monitor.get('transform', 0) != 0:
+            raise Error('The physical output must be unmirrored, unrotated, at scale 1 or 2 and position 0,0.')
         if output == VIRTUAL or output.startswith(('HEADLESS', 'WL-', 'WAYLAND-')):
             raise Error('Choose a physical display.')
         if self.call('configerrors'):
             raise Error('Fix existing Hyprland configuration errors before sharing.')
         return monitor
 
-    def rule(self, output, mode, position='0x0', mirror=''):
+    @staticmethod
+    def rule_code(output, mode, position='0x0', mirror='', *, scale=1):
         identifier(output)
-        self.evaluate('hl.monitor({output=' + json.dumps(output) + ',mode=' + json.dumps(mode) +
-                      ',position=' + json.dumps(position) + ',scale=1,mirror=' + json.dumps(mirror) + '})')
+        if type(scale) not in (int, float) or scale not in (1, 2):
+            raise Error('Unsupported monitor scale; expected 1 or 2.')
+        return ('hl.monitor({output=' + json.dumps(output) + ',mode=' + json.dumps(mode) +
+                ',position=' + json.dumps(position) + ',scale=' + json.dumps(scale) +
+                ',mirror=' + json.dumps(mirror) + '})')
+
+    def rule(self, output, mode, position='0x0', mirror='', *, scale=1):
+        self.evaluate(self.rule_code(output, mode, position, mirror, scale=scale))
 
     def begin(self, config):
         monitor = self.physical(config['output'])
@@ -134,10 +141,11 @@ class Desktop:
                 raise Error('The add-on virtual output name is already in use.')
             before['created'] = True
             write_json(self.paths.journal, before)
-            self.rule(config['output'], self.mode(monitor))
+            self.rule(config['output'], self.mode(monitor), scale=monitor['scale'])
             if self.call('output', 'create', 'headless', VIRTUAL) != 'ok':
                 raise Error('Could not create the virtual output.')
-            self.rule(VIRTUAL, f'{width}x{height}@60', f'{monitor["width"]}x0')
+            # Hyprland positions outputs in logical coordinates, after scaling.
+            self.rule(VIRTUAL, f'{width}x{height}@60', f'{round(monitor["width"] / monitor["scale"])}x0')
             time.sleep(.3)
             virtual = next((m for m in self.query('monitors') if m['name'] == VIRTUAL), {})
             if (virtual.get('width'), virtual.get('height'), virtual.get('scale')) != (width, height, 1):
@@ -155,8 +163,8 @@ class Desktop:
         output = before['output']
         mode = self.mode(before['monitor'])
         # The tail hook reapplies only these runtime rules on config reload.
-        script = ('hl.monitor({output=' + json.dumps(VIRTUAL) + ',mode=' + json.dumps(f'{width}x{height}@60') + ',position="0x0",scale=1})\n' +
-                  'hl.monitor({output=' + json.dumps(output) + ',mode=' + json.dumps(mode) + ',position="0x0",scale=1,mirror=' + json.dumps(VIRTUAL) + '})\n')
+        script = (self.rule_code(VIRTUAL, f'{width}x{height}@60') + '\n' +
+                  self.rule_code(output, mode, mirror=VIRTUAL, scale=before['monitor']['scale']) + '\n')
         atomic_write(self.paths.runtime / 'display.lua', script)
         run(ROOT / 'bin/wayvncctl', '-S', control, 'output-set', VIRTUAL)
         self.reload()
@@ -206,7 +214,7 @@ class Desktop:
             if before['created'] and any(m['name'] == VIRTUAL for m in monitors):
                 if not any(m['name'] == before['output'] for m in monitors):
                     raise Error('Reconnect the physical display and run recover; the virtual output is retained to avoid losing the only display.')
-                self.rule(before['output'], self.mode(before['monitor']))
+                self.rule(before['output'], self.mode(before['monitor']), scale=before['monitor']['scale'])
                 time.sleep(.2)
                 if self.call('output', 'remove', VIRTUAL) != 'ok':
                     raise Error('Could not remove the owned virtual display; recovery journal retained.')
