@@ -20,15 +20,21 @@ if [[ $mode != "encrypted" && $mode != "legacy" ]]; then
   exit 2
 fi
 lab_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-wayvnc_command=(wayvnc)
+runtime_dir="${MAC_NATIVE_SCREENSHARE_RUNTIME_DIR:-$lab_dir}"
+if [[ ! -x $runtime_dir/bin/wayvnc || ! -x $runtime_dir/bin/wayvncctl || ! -r $runtime_dir/lib/libneatvnc.so.1 ]]; then
+  echo "The private screen-sharing server, control client, and library are required." >&2
+  exit 2
+fi
+wayvnc_command=(env "LD_LIBRARY_PATH=$runtime_dir/lib" "$runtime_dir/bin/wayvnc")
+wayvncctl_command=("$runtime_dir/bin/wayvncctl")
 case "${OMARCHY_NATIVE_CLIPBOARD:-0}" in
   0) ;;
   1)
-    if [[ $mode != "legacy" || ! -r $lab_dir/native-clipboard/lib/libneatvnc.so.1 || ! -x $lab_dir/native-clipboard/bin/wayvnc ]]; then
+    if [[ $mode != "legacy" ]]; then
       echo "Native clipboard requires the tested private builds and approved legacy mode." >&2
       exit 2
     fi
-    wayvnc_command=(env "LD_LIBRARY_PATH=$lab_dir/native-clipboard/lib" NVNC_APPLE_CLIPBOARD=1 "$lab_dir/native-clipboard/bin/wayvnc" -r)
+    wayvnc_command=(env "LD_LIBRARY_PATH=$runtime_dir/lib" NVNC_APPLE_CLIPBOARD=1 "$runtime_dir/bin/wayvnc" -r)
     ;;
   *) echo "Invalid native clipboard setting." >&2; exit 2 ;;
 esac
@@ -90,14 +96,14 @@ else
 fi
 unset password
 
-python "$lab_dir/publish.py" --check "$interface" "$address" "$connection"
+/usr/bin/python3 "$lab_dir/publish.py" --check "$interface" "$address" "$connection"
 "${wayvnc_command[@]}" -C "$runtime/config" -S "$runtime/control" -o "$output" -R -n Omarchy -L info &
 server_pid=$!
 
 ready=false
 for (( attempt = 0; attempt < 50; attempt++ )); do
   kill -0 "$server_pid" 2>/dev/null || break
-  if wayvncctl -S "$runtime/control" version >/dev/null 2>&1; then
+  if "${wayvncctl_command[@]}" -S "$runtime/control" version >/dev/null 2>&1; then
     ready=true
     break
   fi
@@ -108,8 +114,8 @@ if [[ $ready != "true" ]]; then
   exit 1
 fi
 
-python "$lab_dir/probe.py" "$address" "$mode" < "$runtime/login.txt"
+/usr/bin/python3 "$lab_dir/probe.py" "$address" "$mode" < "$runtime/login.txt"
 echo "Prototype mode=$mode is listening. Credentials are in $runtime/login.txt"
-python "$lab_dir/publish.py" "$interface" "$address" "$connection" &
+/usr/bin/python3 "$lab_dir/publish.py" "$interface" "$address" "$connection" &
 publisher_pid=$!
 wait -n "$server_pid" "$publisher_pid"

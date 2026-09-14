@@ -14,6 +14,7 @@ import sys
 import time
 
 OUTPUT = 'OMARCHY-SHARE-TEST'
+RUNTIME = Path(os.environ.get('MAC_NATIVE_SCREENSHARE_RUNTIME_DIR', Path(__file__).resolve().parent))
 PHYSICAL = os.environ['OMARCHY_SHARE_PHYSICAL_OUTPUT']
 WIDTH = int(os.environ['OMARCHY_SHARE_WIDTH'])
 HEIGHT = int(os.environ['OMARCHY_SHARE_HEIGHT'])
@@ -39,7 +40,7 @@ def evaluate(code):
 
 
 def control(path, output):
-    run('wayvncctl', '-S', path, 'output-set', output)
+    run(str(RUNTIME / 'bin/wayvncctl'), '-S', path, 'output-set', output)
 
 
 def monitor_rule(output, mode, position, scale=1, mirror=""):

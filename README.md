@@ -2,7 +2,7 @@
 
 An independent, experimental add-on project for using the Mac's built-in Screen Sharing client with an Omarchy desktop: Finder discovery, text clipboard in both directions, Mac keyboard shortcuts, and display sizing.
 
-**Status: source checkpoint. There is no installable package or supported installer yet.** The working prototype has been tested on one Omarchy host and one Mac. The standalone sources need packaging and another machine's acceptance testing before release.
+**Status: experimental developer preview, 0.1.0 alpha 1. Arch packaging is being prepared; setup and service lifecycle remain unfinished.** The working prototype has been tested on one Omarchy host and one Mac. The standalone sources need packaging and another machine's acceptance testing before release.
 
 ## Repositories
 
@@ -16,6 +16,8 @@ An independent, experimental add-on project for using the Mac's built-in Screen 
 These repositories are private backups during development. The standalone build needs only the first three repositories. [dependencies.json](dependencies.json) records the exact modified dependency commits and their upstream bases. [docs/RECOVERY.md](docs/RECOVERY.md) explains how to restore the workspace.
 
 This is a community project, independently maintained from Omarchy, WayVNC, NeatVNC, and Apple. AI assistance was used to research and implement the prototype and prepare these repositories. Original upstream authorship and licenses are retained; see [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md).
+
+See [the first release scope](docs/RELEASE_SCOPE.md) for the target environment, feature boundaries, network limitations, and release gates.
 
 ## Build the source checkpoint
 
@@ -42,7 +44,7 @@ The build does not install software, start sharing, edit desktop configuration, 
 
 ## Integration sources
 
-- `run.sh`, `publish.py`, and `probe.py`: prototype server supervision, network-scoped Finder discovery, and authentication checks. `run.sh` now locates helpers beside itself, without an Omarchy source checkout. Its native mode still expects development binaries in the ignored `native-clipboard/` directory.
+- `run.sh`, `publish.py`, and `probe.py`: prototype server supervision, network-scoped Finder discovery, and authentication checks. `run.sh` now locates helpers beside itself, without an Omarchy source checkout. It requires private `bin/` and `lib/` directories beside the helpers, or an explicit `MAC_NATIVE_SCREENSHARE_RUNTIME_DIR` pointing to a development staging directory. It never falls back to a system WayVNC binary.
 - `mac-shortcuts.lua` and `mac-shortcuts.sh`: remote-device keyboard mappings and prototype lifecycle control. Service names, runtime markers, and the removable Lua hook still need packaging work.
 - `virtual-display.py`: the larger virtual-output trial. It takes explicit output and size inputs and currently assumes one unmirrored physical output at scale 1 and position 0,0.
 - `test.py` and `test-mac-shortcuts.lua`: automated checks that do not change the desktop.

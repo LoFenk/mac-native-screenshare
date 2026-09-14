@@ -16,6 +16,7 @@ import time
 from probe import read_exact, vnc_response
 
 lab = Path(__file__).resolve().parent
+runtime = Path(os.environ.get('MAC_NATIVE_SCREENSHARE_RUNTIME_DIR', lab))
 password_file = Path(os.environ['OMARCHY_SHARE_TEST_PASSWORD_FILE'])
 password = password_file.read_bytes().strip()
 physical = os.environ['OMARCHY_SHARE_PHYSICAL_OUTPUT']
@@ -52,7 +53,7 @@ def frame(c, expected, current, bpp):
 with tempfile.TemporaryDirectory(prefix='output-switch-check-', dir=os.environ['XDG_RUNTIME_DIR']) as tmp:
     config = Path(tmp) / 'config'
     config.write_bytes(b'address=127.0.0.1\nport=5902\nenable_auth=true\nenable_pam=false\nrelax_encryption=true\nallow_broken_crypto=true\npassword=' + password + b'\n')
-    env = dict(os.environ, LD_LIBRARY_PATH=str(lab/'native-clipboard/lib'), NVNC_APPLE_CLIPBOARD='1')
+    env = dict(os.environ, LD_LIBRARY_PATH=str(runtime/'lib'), NVNC_APPLE_CLIPBOARD='1')
     with tempfile.TemporaryFile() as log:
         process = subprocess.Popen([sys.argv[1], '-r', '-C', str(config), '-S', tmp+'/control', '-o', physical, '-R', '-L', 'info'], env=env, stdout=log, stderr=log)
         try:
@@ -77,7 +78,7 @@ with tempfile.TemporaryDirectory(prefix='output-switch-check-', dir=os.environ['
                 count = int(sys.argv[2]) if len(sys.argv)>2 else 12
                 for index in range(count):
                     output, expected = ('OMARCHY-SHARE-TEST',virtual_size) if index%2==0 else (physical,physical_size)
-                    subprocess.run(['wayvncctl','-S',tmp+'/control','output-set',output],check=True,stdout=subprocess.DEVNULL,timeout=3)
+                    subprocess.run([str(runtime/'bin/wayvncctl'),'-S',tmp+'/control','output-set',output],check=True,stdout=subprocess.DEVNULL,timeout=3)
                     c.sendall(struct.pack('!BBHHHH',3,0,0,0,*expected))
                     current=frame(c,expected,current,bpp)
                     assert process.poll() is None

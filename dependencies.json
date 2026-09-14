@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "status": "source-checkpoint; installer pending",
+  "status": "0.1.0alpha1 developer preview; setup and service lifecycle pending",
   "repositories": {
     "neatvnc": {
       "repository": "https://github.com/LoFenk/neatvnc-native-screen-sharing.git",
