@@ -1,6 +1,6 @@
 # Build the experimental Arch package
 
-The current recipe builds `mac-native-screenshare`, version `0.1.0alpha2-5`, for `x86_64`, adding custom passwords through `reset-password [PASSWORD]`. The revision 4 download links below reproduce the prior published package; use the maintainer export instructions to build revision 5. It targets the environment in [RELEASE_SCOPE.md](RELEASE_SCOPE.md). Installation leaves sharing disabled. The package installs a user unit and upgrade/removal hooks, but does not enable startup, create credentials, change firewall rules, or edit desktop configuration. Explicit setup and controls are documented in [USAGE.md](USAGE.md).
+The current recipe builds `mac-native-screenshare`, version `0.1.0alpha2-5`, for `x86_64`, adding custom passwords through `reset-password [PASSWORD]`. It targets the environment in [RELEASE_SCOPE.md](RELEASE_SCOPE.md). Installation leaves sharing disabled. The package installs a user unit and upgrade/removal hooks, but does not enable startup, create credentials, change firewall rules, or edit desktop configuration. Explicit setup and controls are documented in [USAGE.md](USAGE.md).
 
 ## Source and recipe layout
 
@@ -12,16 +12,16 @@ Maintainer exports are made from local Git checkouts. Release users can instead 
 
 ## Rebuild from the complete source bundle
 
-Download `mac-native-screenshare-0.1.0alpha2-4.src.tar.gz` and `SHA256SUMS` from the [release page](https://github.com/LoFenk/mac-native-screenshare/releases/tag/v0.1.0-alpha.2-r4). The separate dependency repositories are not needed after downloading this bundle.
+Download `mac-native-screenshare-0.1.0alpha2-5.src.tar.gz` and `SHA256SUMS` from the [release page](https://github.com/LoFenk/mac-native-screenshare/releases/tag/v0.1.0-alpha.2-r5). The separate dependency repositories are not needed after downloading this bundle.
 
 ```bash
 sha256sum -c SHA256SUMS --ignore-missing
 mkdir rebuild
-bsdtar -xf mac-native-screenshare-0.1.0alpha2-4.src.tar.gz -C rebuild
+bsdtar -xf mac-native-screenshare-0.1.0alpha2-5.src.tar.gz -C rebuild
 cd rebuild/mac-native-screenshare
 makepkg --verifysource
 makepkg
-python verify-package.py --package ./mac-native-screenshare-0.1.0alpha2-4-x86_64.pkg.tar.zst
+python verify-package.py --package ./mac-native-screenshare-0.1.0alpha2-5-x86_64.pkg.tar.zst
 ```
 
 Install the declared build dependencies before running `makepkg`. Source verification and compilation then use the attached snapshots without fetching private Git repositories. The integration snapshot, recipe, and checksum manifest are versioned together. GitHub's automatic source archives alone do not contain the dependency snapshots.

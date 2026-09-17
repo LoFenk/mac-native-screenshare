@@ -4,17 +4,17 @@ An independent, experimental add-on project for using the Mac's built-in Screen 
 
 **Status: experimental developer preview, 0.1.0 alpha 2. Setup, service controls, and recovery/removal are implemented.** The working prototype has been tested on one Omarchy host and one Mac. The packaged lifecycle still needs another machine's acceptance testing before a stable release; automated and detached-server checks are not real-client acceptance.
 
-The revision 5 development recipe adds `reset-password [PASSWORD]`: choose a password while sharing is stopped, or omit the argument to generate one. See the [usage guide](docs/USAGE.md). The published revision 4 download below predates this change.
+Revision 5 adds `reset-password [PASSWORD]`: choose a password while sharing is stopped, or omit the argument to generate one. See the [usage guide](docs/USAGE.md).
 
 **Project contact: Paul Stoica <paul@totallynormal.io>. The project-specific implementation, tests, packaging, and documentation were produced using OpenAI Codex at Paul's direction.** His commit identity does not imply manual authorship or independent code review. Upstream authors retain credit for their code; see [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md).
 
 ## Download and install
 
-Use the binary package and `SHA256SUMS` from the [alpha 2 revision 4 release](https://github.com/LoFenk/mac-native-screenshare/releases/tag/v0.1.0-alpha.2-r4). Downloads are public. Read the [usage guide](docs/USAGE.md) before configuring sharing.
+Use the binary package and `SHA256SUMS` from the [alpha 2 revision 5 release](https://github.com/LoFenk/mac-native-screenshare/releases/tag/v0.1.0-alpha.2-r5). Downloads are public. Read the [usage guide](docs/USAGE.md) before configuring sharing.
 
 ```bash
 sha256sum -c SHA256SUMS --ignore-missing
-sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-4-x86_64.pkg.tar.zst
+sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-5-x86_64.pkg.tar.zst
 ```
 
 After setup, run `mac-native-screenshare display` for a terminal menu with normal/temporary desktop choices and a guide you can show or hide with **h**. Setup now asks before applying the scoped firewall rule; existing installations can use `mac-native-screenshare firewall --apply`.

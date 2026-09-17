@@ -1,3 +1,13 @@
+# 0.1.0alpha2-5 custom passwords
+
+Validated September 17, 2026. `reset-password [PASSWORD]` now accepts a chosen 1–8-character printable ASCII password while sharing is stopped; omission still generates an eight-character credential. Initial setup generates a credential and repeated setup preserves it.
+
+Integration source: `8163abdb29fb1f75a79633364bc191c5d0dfcf73`. Dependency pins are unchanged. The public package was rebuilt in the existing isolated environment with generic `/work` build paths. Four NeatVNC suites, three WayVNC suites, 13 protocol/network tests, 56 lifecycle tests, five package transaction tests, three supervisor tests, Lua checks, and shell checks passed. Short and punctuation-containing passwords authenticated against real detached VNC servers. The binary passed archive verification and temporary-root revision 4 upgrade/removal. The complete source bundle independently passed checksum verification after extraction.
+
+A local build of revision 5 was installed through pacman on the development host, preserved its existing password, and restarted the packaged service. Doctor and installed-file checks passed; the retired prototype was not used. The public rebuild uses the same pinned implementation with different build metadata. Second-machine/Mac acceptance of the new artifact remains pending. See the release's `BUILD-REPORT.md` and `build-environment.json` for details and limits.
+
+---
+
 # 0.1.0alpha2-4 display menu and firewall confirmation
 
 Validated September 14, 2026. This experimental prerelease adds a terminal display menu, instructions that can be shown/hidden, and explicit confirmation before applying a scoped UFW rule. Installation remains inert; setup and sharing remain user actions.

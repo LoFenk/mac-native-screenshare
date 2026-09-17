@@ -1,5 +1,9 @@
 # Verification record
 
+## Custom-password release, package revision 5
+
+The current package supports `reset-password [PASSWORD]`, with explicit 1–8-character printable ASCII passwords or automatic generation when omitted. [Package validation](packaging/arch/VALIDATION.md) records the full rebuild, custom-password authentication against real detached VNC servers, final archive checks, and temporary-root revision upgrade/removal. A local revision 5 build was installed through pacman and its packaged service restarted successfully with the existing credential preserved. The public artifact was rebuilt from the same pinned implementation in the generic isolated build environment. Separate second-machine/Mac acceptance remains pending.
+
 ## Original source checkpoint
 
 The [original verification record](docs/checkpoint/VERIFICATION.md) reports a fresh build of the pinned NeatVNC and WayVNC sources with all four NeatVNC suites, three WayVNC suites, 13 integration unit checks, Lua shortcut checks, and shell syntax checks passing. It separately records the original host's Mac-client acceptance.
