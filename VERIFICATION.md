@@ -1,13 +1,16 @@
 # Verification record
 
-## Revision 6 keyboard defaults — September 17, 2026
+## Revision 7 keyboard defaults — September 17, 2026
 
-Built `0.1.0alpha2-6` from integration `f8040ba712b55c403b35f1cf8d4102c9a962f829`, WayVNC `9f754d0b5b3886ac124013bcdd113bc76aaba24e`, and the unchanged NeatVNC pin. The new coverage checks physical versus virtual keyboard selection, active layout groups, composed accents, terminal Option+Up, idle map replacement, lock preservation, and invalid/busy update handling.
+Revision 6 was installed after administrator authentication. With the personal service keyboard override and shortcut snippet removed, accents and Option+Up passed in both Foot and Omarchy agent terminals. A live system-layout change from US Macintosh to French exposed stale input-method state: `é` became `2`, even though WayVNC had received the new map. The original system layout was restored after the test.
 
-All four NeatVNC suites, three WayVNC suites, 13 protocol/network tests, 56 lifecycle tests, seven keyboard synchronization tests, five package transaction tests, four detached-server/control tests, and Lua/shell checks passed. Binary verification, temporary-root revision 5→6 upgrade/removal, host dependency resolution, and offline source-bundle verification passed. The build reused the isolated generic-account environment documented in the revision 5 report.
+Hyprland 0.56.2's input-method grab caches keyboard data by device identity ([source](https://github.com/hyprwm/Hyprland/blob/v0.56.2/src/protocols/InputMethodV2.cpp#L27)). WayVNC now recreates the idle virtual keyboard resource when applying a prepared map. It retains the RFB connection, pointer, and keyboard lock state. The private control command still waits for held keys to be released and prepares all maps before changing devices.
 
-The user confirmed the prior personal accent and Option+Up fixes. Live revision 6 acceptance with the personal overrides removed is pending administrator authentication for installation. The tested binary/source artifacts have not been published.
+The opt-in `python test-keyboard-live.py --live-desktop --runtime /path/to/runtime` regression check reproduces the input-method case using a private authenticated Unix socket and a scratch Foot terminal. It changes no desktop configuration. The development build passed US→French→US accent and Option+Up checks through the same connection, with Fcitx5 active, and correctly deferred an update while Option was held. All three WayVNC suites passed. Revision 7 package build and installed-package acceptance follow below when completed. Nothing has been published.
 
+## Revision 6 build checks
+
+Built `0.1.0alpha2-6` from integration `f8040ba712b55c403b35f1cf8d4102c9a962f829`, WayVNC `9f754d0b5b3886ac124013bcdd113bc76aaba24e`, and the unchanged NeatVNC pin. All four NeatVNC and three WayVNC suites; 13 protocol, 56 lifecycle, seven keyboard-policy, five package-transaction, and four supervisor tests; Lua/hook/shell checks; archive verification; temporary-root upgrade/removal; and offline source verification passed. Those isolated checks did not expose the live input-method issue described above. Revision 7 supersedes this build.
 
 ## Custom-password release, package revision 5
 
