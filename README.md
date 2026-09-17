@@ -10,11 +10,11 @@ Revision 7 includes automatic system keyboard layout tracking, composed Mac acce
 
 ## Download and install
 
-Use the binary package and `SHA256SUMS` from the [alpha 2 revision 5 release](https://github.com/LoFenk/mac-native-screenshare/releases/tag/v0.1.0-alpha.2-r5). Downloads are public. Read the [usage guide](docs/USAGE.md) before configuring sharing.
+Use the binary package and `SHA256SUMS` from the [alpha 2 revision 7 release](https://github.com/LoFenk/mac-native-screenshare/releases/tag/v0.1.0-alpha.2-r7). Downloads are public. Read the [usage guide](docs/USAGE.md) before configuring sharing.
 
 ```bash
 sha256sum -c SHA256SUMS --ignore-missing
-sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-5-x86_64.pkg.tar.zst
+sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-7-x86_64.pkg.tar.zst
 ```
 
 After setup, run `mac-native-screenshare display` for a terminal menu with normal/temporary desktop choices and a guide you can show or hide with **h**. Setup now asks before applying the scoped firewall rule; existing installations can use `mac-native-screenshare firewall --apply`.
