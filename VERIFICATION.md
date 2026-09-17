@@ -1,5 +1,14 @@
 # Verification record
 
+## Revision 6 keyboard defaults — September 17, 2026
+
+Built `0.1.0alpha2-6` from integration `f8040ba712b55c403b35f1cf8d4102c9a962f829`, WayVNC `9f754d0b5b3886ac124013bcdd113bc76aaba24e`, and the unchanged NeatVNC pin. The new coverage checks physical versus virtual keyboard selection, active layout groups, composed accents, terminal Option+Up, idle map replacement, lock preservation, and invalid/busy update handling.
+
+All four NeatVNC suites, three WayVNC suites, 13 protocol/network tests, 56 lifecycle tests, seven keyboard synchronization tests, five package transaction tests, four detached-server/control tests, and Lua/shell checks passed. Binary verification, temporary-root revision 5→6 upgrade/removal, host dependency resolution, and offline source-bundle verification passed. The build reused the isolated generic-account environment documented in the revision 5 report.
+
+The user confirmed the prior personal accent and Option+Up fixes. Live revision 6 acceptance with the personal overrides removed is pending administrator authentication for installation. The tested binary/source artifacts have not been published.
+
+
 ## Custom-password release, package revision 5
 
 The current package supports `reset-password [PASSWORD]`, with explicit 1–8-character printable ASCII passwords or automatic generation when omitted. [Package validation](packaging/arch/VALIDATION.md) records the full rebuild, custom-password authentication against real detached VNC servers, final archive checks, and temporary-root revision upgrade/removal. A local revision 5 build was installed through pacman and its packaged service restarted successfully with the existing credential preserved. The public artifact was rebuilt from the same pinned implementation in the generic isolated build environment. Separate second-machine/Mac acceptance remains pending.
