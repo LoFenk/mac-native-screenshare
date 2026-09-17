@@ -2,7 +2,7 @@
 # Project-specific code and packaging produced using OpenAI Codex; see ACKNOWLEDGEMENTS.md.
 pkgname=mac-native-screenshare
 pkgver=0.1.0alpha2
-pkgrel=5
+pkgrel=6
 pkgdesc='Experimental native Mac Screen Sharing add-on for Omarchy'
 arch=('x86_64')
 url='https://github.com/LoFenk/mac-native-screenshare'
@@ -11,7 +11,7 @@ depends=(
   'bash' 'coreutils' 'glibc>=2.44'
   'aml>=1.0.0' 'aml<2.0.0' 'pixman' 'libjpeg-turbo' 'gnutls'
   'nettle>=4.0' 'nettle<5.0' 'libnettle.so' 'libhogweed.so' 'gmp' 'zlib'
-  'wayland' 'jansson' 'libxkbcommon'
+  'wayland' 'jansson' 'libxkbcommon' 'xkeyboard-config'
   'python' 'python-dbus' 'python-gobject' 'openssl'
   'networkmanager' 'avahi' 'systemd' 'util-linux'
   'omarchy>=4.0.3' 'omarchy<4.1' 'hyprland>=0.56.2' 'hyprland<0.57'
@@ -22,9 +22,9 @@ optdepends=('ufw: apply the optional scoped firewall rule' 'sudo: request admini
 # Keep normal Arch hardening; avoid a separate debug artifact and LTO in this preview.
 options=('!debug' '!lto')
 source=(
-  'integration-8163abdb29fb1f75a79633364bc191c5d0dfcf73.tar.gz'
+  'integration-f8040ba712b55c403b35f1cf8d4102c9a962f829.tar.gz'
   'neatvnc-458553ce35b8828f9973b20f36fe3fc8460b45ab.tar.gz'
-  'wayvnc-5c2fc1356d84c192d23481fa526fee30ca749ac8.tar.gz'
+  'wayvnc-9f754d0b5b3886ac124013bcdd113bc76aaba24e.tar.gz'
   'wayvnc-private-rpath.patch'
   'sources.json'
   'README-PACKAGE.md'
@@ -32,16 +32,16 @@ source=(
   'THIRD-PARTY-NOTICES'
 )
 sha256sums=(
-  '0c935ce01c7f4d2d72d8735cf3c6093a922202bb149ab316515183c1414fbae3'
+  'e87dd5528f6995e543105b5d201560936e08822351c1b1184ed0534d3e2faa63'
   'adeaa1d9a9a7baee686b9ab28c526f8faff7aaa5a472ce21102c229f30aefc1b'
-  '34e3235373255dd43afc93d1983198bb37a63ee6ad461b16fc846febdc6ffefe'
+  'e301ac074143cfdf76fbaad39721d1958024487d06a34fa818f0a316d360ac6d'
   '8c3e05e3f257cee878a520d9631c5d2c6e1baa330b50a889a6a5fc2765bbbc14'
-  '02c580cb9f0f6fff0058f49c49bb02ce8747d32539fc19849afaf3835625f206'
-  '50bdb115724e360942a75e41405ab0144ee9607a5b5a634720baa859cdd1808e'
-  'e8f08e14b57860033fa48f82f7cd295057ded38f72f974eb3d409d73c2682825'
+  'cc2f50bd03e04878c20da876fc23de4708914ec92eb5d12636348a0b31406529'
+  'e9727b96d9d18fe536b99172d8fda7253656fa79e675c75938ea79b9057812d1'
+  '66a6c36ebd2c908037f1184d8d0ca9915496d19c29c397293df0c69259834fed'
   '0cd39a006c67c5f41d995607eb1ab9a5767c6e5791614083d23882805c458763'
 )
-export SOURCE_DATE_EPOCH=1789650280
+export SOURCE_DATE_EPOCH=1789659586
 
 prepare() {
   patch --directory="$srcdir/wayvnc" --strip=1 --input="$srcdir/wayvnc-private-rpath.patch"
@@ -84,6 +84,7 @@ check() {
     meson test -C "$srcdir/build-wayvnc" --print-errorlogs
   /usr/bin/python3 "$srcdir/integration/test.py"
   /usr/bin/python3 "$srcdir/integration/test-lifecycle.py"
+  /usr/bin/python3 "$srcdir/integration/test-keyboard.py"
   /usr/bin/python3 "$srcdir/integration/test-package-lifecycle.py"
   lua "$srcdir/integration/test-mac-shortcuts.lua" "$srcdir/integration/mac-shortcuts.lua"
   lua "$srcdir/integration/test-hyprland-hook.lua" "$srcdir/integration/hyprland-hook.lua"
@@ -102,7 +103,7 @@ package() {
   local _docs="$pkgdir/usr/share/doc/$pkgname"
   local _licenses="$pkgdir/usr/share/licenses/$pkgname"
   for _file in probe.py mac-shortcuts.lua hyprland-hook.lua VERSION display-guide.txt \
-      mns_common.py mns_cli.py mns_session.py mns_desktop.py mns_relay.py mns_discovery.py \
+      mns_common.py mns_cli.py mns_session.py mns_desktop.py mns_relay.py mns_discovery.py mns_keyboard.py \
       package-lifecycle.py; do
     install -Dm644 "$srcdir/integration/$_file" "$_runtime/$_file"
   done

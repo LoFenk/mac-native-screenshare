@@ -4,7 +4,7 @@ An independent, experimental add-on project for using the Mac's built-in Screen 
 
 **Status: experimental developer preview, 0.1.0 alpha 2. Setup, service controls, and recovery/removal are implemented.** The working prototype has been tested on one Omarchy host and one Mac. The packaged lifecycle still needs another machine's acceptance testing before a stable release; automated and detached-server checks are not real-client acceptance.
 
-Revision 5 adds `reset-password [PASSWORD]`: choose a password while sharing is stopped, or omit the argument to generate one. See the [usage guide](docs/USAGE.md).
+Revision 6 adds automatic system keyboard layout tracking, composed Mac accents, and Option+Up in regular terminals. Existing connections update without restarting sharing. See the [keyboard behavior](docs/USAGE.md#keyboard-layouts-accents-and-optionup).
 
 **Project contact: Paul Stoica <paul@totallynormal.io>. The project-specific implementation, tests, packaging, and documentation were produced using OpenAI Codex at Paul's direction.** His commit identity does not imply manual authorship or independent code review. Upstream authors retain credit for their code; see [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md).
 

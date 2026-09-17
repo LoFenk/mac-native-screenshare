@@ -33,7 +33,7 @@ def verify_root(root):
                 PREFIX / 'mac-shortcuts.lua', PREFIX / 'hyprland-hook.lua',
                 PREFIX / 'VERSION', PREFIX / 'display-guide.txt', DOCS / 'README.md', DOCS / 'USAGE.md', LAUNCHER, UNIT, *HOOKS,
                 *[PREFIX / name for name in ('mns_common.py', 'mns_cli.py', 'mns_session.py', 'mns_desktop.py',
-                                             'mns_relay.py', 'mns_discovery.py', 'package-lifecycle.py')],
+                                             'mns_relay.py', 'mns_discovery.py', 'mns_keyboard.py', 'package-lifecycle.py')],
                 DOCS / 'RELEASE_SCOPE.md', DOCS / 'sources.json',
                 LICENSES / 'LICENSE', LICENSES / 'neatvnc-COPYING',
                 LICENSES / 'wayvnc-COPYING', LICENSES / 'THIRD-PARTY-NOTICES']
