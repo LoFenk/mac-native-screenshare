@@ -192,6 +192,71 @@ class ConfigurationTests(Workspace):
                 cli.main()
 
 
+class PasswordTests(Workspace):
+    def setUp(self):
+        super().setUp()
+        common.write_json(self.paths.settings, CONFIG)
+        common.atomic_write(self.paths.password, 'Old12345\n')
+
+    def reset(self, *arguments, active=False):
+        output = io.StringIO()
+        state = 'active' if active else 'inactive'
+        with patch.object(cli, 'Paths', return_value=self.paths), \
+             patch.object(cli, 'systemctl', return_value=subprocess.CompletedProcess([], 0, state + '\n', '')), \
+             patch('sys.argv', ['mns', 'reset-password', *arguments]), \
+             patch('sys.stdout', output), patch('sys.stderr', output):
+            cli.main()
+        return output.getvalue()
+
+    def test_custom_password_roundtrips_without_echo_or_settings_changes(self):
+        before = self.paths.settings.read_bytes()
+        for value in ('x', 'short', 'a b#=!"', '12345678', '-secret'):
+            with self.subTest(value=value):
+                output = self.reset('--', value)
+                self.assertEqual(common.password(self.paths), value)
+                self.assertEqual(self.paths.password.read_text(), value + '\n')
+                self.assertEqual(self.paths.password.stat().st_mode & 0o777, 0o600)
+                self.assertEqual(self.paths.settings.read_bytes(), before)
+                self.assertNotIn(value, output)
+
+    def test_omitted_argument_generates_a_new_eight_character_password(self):
+        output = self.reset()
+        value = common.password(self.paths)
+        self.assertRegex(value, r'^[A-Za-z0-9+/]{8}$')
+        self.assertNotEqual(value, 'Old12345')
+        self.assertNotIn(value, output)
+
+    def test_invalid_password_does_not_overwrite_or_echo(self):
+        for value in ('', '123456789', ' leading', 'end ', '\tbad', 'bad\n',
+                      'a\r\nb', 'nul\0', 'bad\x7f', 'caf\u00e9'):
+            with self.subTest(value=value), self.assertRaises(common.Error) as raised:
+                self.reset('--', value)
+            self.assertEqual(self.paths.password.read_text(), 'Old12345\n')
+            self.assertEqual(str(raised.exception),
+                             'Use 1–8 printable ASCII characters without leading or trailing spaces.')
+
+    def test_active_sharing_preserves_password_for_both_reset_modes(self):
+        for arguments in ((), ('newpass',)):
+            with self.subTest(arguments=arguments), self.assertRaises(common.Error):
+                self.reset(*arguments, active=True)
+            self.assertEqual(common.password(self.paths), 'Old12345')
+
+    def test_saved_password_is_validated_without_whitespace_normalization(self):
+        for value in ('a ', ' a', 'a\n\n', 'a\t', 'caf\u00e9', '123456789', ''):
+            with self.subTest(value=value):
+                common.atomic_write(self.paths.password, value + '\n')
+                with self.assertRaises(common.Error):
+                    common.password(self.paths)
+
+    def test_repeated_setup_preserves_custom_password(self):
+        self.paths.settings.unlink()
+        self.paths.password.unlink()
+        self.configure()
+        self.reset('short')
+        self.configure()
+        self.assertEqual(common.password(self.paths), 'short')
+
+
 class NetworkTests(unittest.TestCase):
     def test_dhcp_rebind_on_same_profile_and_subnet(self):
         with patch.object(common, 'network_state', return_value=(CONFIG['connection'], [ipaddress('192.168.50.22/24')])):

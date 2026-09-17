@@ -13,7 +13,7 @@ import subprocess
 import sys
 import tempfile
 
-from mns_common import Error, NAME, Paths, ROOT, SCHEMA, UNIT, atomic_write, lock, network_state, new_password, password, private_dir, read_private, resolve_network, run, settings, validate_settings, write_json
+from mns_common import Error, NAME, Paths, ROOT, SCHEMA, UNIT, atomic_write, lock, network_state, new_password, password, private_dir, read_private, resolve_network, run, settings, validate_password, validate_settings, write_json
 from mns_desktop import Desktop, add_hooks, config_text, hook_blocks, remove_hooks, verify_hooks
 from mns_relay import reserve
 from mns_session import recover, session_environment
@@ -392,9 +392,12 @@ def main():
         ('networks', 'List eligible connected private networks'), ('displays', 'List displays'),
         ('start', 'Start sharing in this desktop session'), ('stop', 'Stop and restore the desktop'),
         ('enable', 'Enable sharing at future graphical logins'), ('disable', 'Stop and disable login startup'),
-        ('password', 'Show the password in this terminal'), ('reset-password', 'Rotate the password while stopped'),
+        ('password', 'Show the password in this terminal'),
         ('recover', 'Retry restoration after an interrupted session'), ('doctor', 'Check setup without starting sharing')):
         subs.add_parser(command, help=help_text)
+    subs.add_parser('reset-password', help='Set or generate a password while stopped').add_argument(
+        'new_password', nargs='?', metavar='PASSWORD',
+        help='1–8 printable ASCII characters, without leading/trailing spaces; omit to generate a password')
     subs.add_parser('firewall', help='Show the scoped UFW rule; optionally confirm and apply it').add_argument(
         '--apply', action='store_true', help='Ask for confirmation in a terminal, then apply the rule with sudo')
     subs.add_parser('display', help='Choose normal or temporary desktop sizing and toggle its guide').add_argument(
@@ -460,8 +463,9 @@ def main():
         elif args.command == 'reset-password':
             stopped()
             settings(paths)
-            atomic_write(paths.password, new_password() + '\n')
-            print('Fresh password saved. Run password to view it.')
+            value = new_password() if args.new_password is None else validate_password(args.new_password)
+            atomic_write(paths.password, value + '\n')
+            print('Password saved. Run password to view it.')
         elif args.command == 'doctor':
             config = settings(paths)
             password(paths)

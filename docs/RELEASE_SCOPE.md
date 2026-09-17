@@ -25,7 +25,7 @@ The original host's prototype demonstrated these behaviors. The packaged install
 
 ## Transport and access limits
 
-The native compatibility mode uses legacy VNC password authentication. Desktop, input, and clipboard traffic are **not encrypted by VNC**; the password mechanism only uses eight bytes. Setup generates a fresh random eight-character credential, stores it privately, and requires acceptance of the transport limitation. Starting and login enablement are explicit commands.
+The native compatibility mode uses legacy VNC password authentication. Desktop, input, and clipboard traffic are **not encrypted by VNC**; the password mechanism only uses eight bytes. Setup generates a fresh random eight-character credential, stores it privately, and requires acceptance of the transport limitation. While stopped, `reset-password [PASSWORD]` accepts a chosen 1–8-character printable ASCII password or generates one when omitted. Starting and login enablement are explicit commands.
 
 Initial use is confined to a deliberately selected trusted private LAN, with access and discovery restricted to that selection. It must not automatically listen on every interface, enable router forwarding, expose the service publicly, or assume that password authentication encrypts the connection. Network/profile changes should stop discovery and sharing. A VPN or SSH tunnel could protect transport, but automatic tunnel setup and cross-subnet Finder discovery are outside the first release scope.
 

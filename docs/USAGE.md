@@ -52,11 +52,21 @@ On the Mac, use Finder → Network → the configured desktop name → Share Scr
 | `display --guide` | Print the same instructions without changing settings; available before setup |
 | `firewall [--apply]` | Print the scoped rule, or ask for confirmation before applying it through sudo |
 | `doctor` | Check configuration, credential permissions, network, port when stopped, display, hooks, and Avahi |
-| `reset-password` | Generate a new password while stopped; use `password` to view it |
+| `reset-password [PASSWORD]` | Set the supplied password, or generate one when omitted, while stopped; use `password` to view it |
 | `recover` | Retry journaled cleanup after an interrupted session; refuses while the supervisor owns the session lock |
 | `remove` | Stop, disable, remove owned config blocks and credentials; keep unrelated edits and unrecognized files |
 
 For logs, use `journalctl --user -u mac-native-screenshare.service`. Do not publish credential files or the runtime VNC configuration.
+
+To choose a password after setup:
+
+```bash
+mac-native-screenshare stop
+mac-native-screenshare reset-password 'my-pass'
+mac-native-screenshare start
+```
+
+Omit the argument to generate a fresh eight-character password. Custom passwords accept 1–8 printable ASCII characters, including punctuation and internal spaces, but no leading or trailing spaces. Longer values are rejected because legacy VNC uses at most eight bytes. Quote passwords containing shell characters; use `reset-password -- '-secret'` for a password beginning with a hyphen. Command-line passwords can appear in shell history and process listings. The command never prints the chosen value. Setup still generates a password initially and preserves it on subsequent setup runs.
 
 ## Display menu and instructions
 

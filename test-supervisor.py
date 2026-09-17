@@ -17,7 +17,7 @@ RUNTIME = None
 
 
 class SupervisorTests(unittest.IsolatedAsyncioTestCase):
-    async def exercise(self, failure):
+    async def exercise(self, failure, password='Abcd1234'):
         with tempfile.TemporaryDirectory(prefix='mns-supervisor-') as directory:
             base = Path(directory)
             paths = common.Paths(base / 'home', base / 'run')
@@ -28,7 +28,7 @@ class SupervisorTests(unittest.IsolatedAsyncioTestCase):
             (root / 'bin').symlink_to(RUNTIME / 'bin', target_is_directory=True)
             (root / 'lib').symlink_to(RUNTIME / 'lib', target_is_directory=True)
             (root / 'VERSION').write_text('test-version\n')
-            common.atomic_write(paths.password, 'Abcd1234\n')
+            common.atomic_write(paths.password, common.validate_password(password) + '\n')
             with socket.socket() as free:
                 free.bind(('127.0.0.1', 0))
                 port = free.getsockname()[1]
@@ -116,6 +116,11 @@ class SupervisorTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_server_crash_cleans_children_listener_and_credentials(self):
         await self.exercise('server')
+
+    async def test_custom_passwords_authenticate_with_real_detached_server(self):
+        for password in ('x', 'a b#=!"', '-secret'):
+            with self.subTest(password=password):
+                await self.exercise('network', password)
 
 
 if __name__ == '__main__':

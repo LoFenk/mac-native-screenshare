@@ -133,11 +133,19 @@ def settings(paths):
     return validate_settings(json.loads(read_private(paths.settings)))
 
 
-def password(paths):
-    value = read_private(paths.password).strip()
-    if not re.fullmatch(r'[A-Za-z0-9+/]{8}', value):
-        raise Error('Invalid saved credential. Run reset-password while sharing is stopped.')
+def validate_password(value):
+    if (not 1 <= len(value) <= 8 or value != value.strip() or
+            any(not 32 <= ord(character) <= 126 for character in value)):
+        raise Error('Use 1–8 printable ASCII characters without leading or trailing spaces.')
     return value
+
+
+def password(paths):
+    value = read_private(paths.password).removesuffix('\n')
+    try:
+        return validate_password(value)
+    except Error:
+        raise Error('Invalid saved credential. Run reset-password while sharing is stopped.')
 
 
 def new_password():

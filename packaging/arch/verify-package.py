@@ -83,6 +83,7 @@ def verify_root(root):
     run('/usr/bin/python3', str(root / PREFIX / 'mns_cli.py'), '--help')
     assert 'DISPLAY SIZE AND SHARPNESS' in run('/usr/bin/python3', str(root / PREFIX / 'mns_cli.py'), 'display', '--guide')
     assert '--apply' in run('/usr/bin/python3', str(root / PREFIX / 'mns_cli.py'), 'firewall', '--help')
+    assert '[PASSWORD]' in run('/usr/bin/python3', str(root / PREFIX / 'mns_cli.py'), 'reset-password', '--help')
     assert run('/usr/bin/python3', str(root / PREFIX / 'mns_cli.py'), '--version').strip() == (root / PREFIX / 'VERSION').read_text().strip()
     unit = (root / UNIT).read_text()
     for directive in ('PartOf=graphical-session.target', 'Requisite=graphical-session.target',
