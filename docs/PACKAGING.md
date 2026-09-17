@@ -1,6 +1,6 @@
 # Build the experimental Arch package
 
-The package name is `mac-native-screenshare`, version `0.1.0alpha2-4`, for `x86_64`. It targets the environment in [RELEASE_SCOPE.md](RELEASE_SCOPE.md). Installation leaves sharing disabled. The package installs a user unit and upgrade/removal hooks, but does not enable startup, create credentials, change firewall rules, or edit desktop configuration. Explicit setup and controls are documented in [USAGE.md](USAGE.md).
+The current recipe builds `mac-native-screenshare`, version `0.1.0alpha2-5`, for `x86_64`, adding custom passwords through `reset-password [PASSWORD]`. The revision 4 download links below reproduce the prior published package; use the maintainer export instructions to build revision 5. It targets the environment in [RELEASE_SCOPE.md](RELEASE_SCOPE.md). Installation leaves sharing disabled. The package installs a user unit and upgrade/removal hooks, but does not enable startup, create credentials, change firewall rules, or edit desktop configuration. Explicit setup and controls are documented in [USAGE.md](USAGE.md).
 
 ## Source and recipe layout
 
@@ -37,7 +37,7 @@ Restore the three-repository workspace using [RECOVERY.md](RECOVERY.md). From it
 cd package-build/0.1.0alpha2
 makepkg
 /usr/bin/python3 verify-package.py \
-  --package ./mac-native-screenshare-0.1.0alpha2-4-x86_64.pkg.tar.zst
+  --package ./mac-native-screenshare-0.1.0alpha2-5-x86_64.pkg.tar.zst
 ```
 
 Use a new output directory for a fresh build. The builder needs Arch's `base-devel` and the runtime/build/check dependencies declared in the recipe, including Meson 1.12 or newer and Ninja. `makepkg` does not install anything unless explicitly invoked with install/dependency-install options, which the commands above omit.
