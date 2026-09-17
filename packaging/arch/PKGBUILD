@@ -2,7 +2,7 @@
 # Project-specific code and packaging produced using OpenAI Codex; see ACKNOWLEDGEMENTS.md.
 pkgname=mac-native-screenshare
 pkgver=0.1.0alpha2
-pkgrel=6
+pkgrel=7
 pkgdesc='Experimental native Mac Screen Sharing add-on for Omarchy'
 arch=('x86_64')
 url='https://github.com/LoFenk/mac-native-screenshare'
@@ -22,9 +22,9 @@ optdepends=('ufw: apply the optional scoped firewall rule' 'sudo: request admini
 # Keep normal Arch hardening; avoid a separate debug artifact and LTO in this preview.
 options=('!debug' '!lto')
 source=(
-  'integration-f8040ba712b55c403b35f1cf8d4102c9a962f829.tar.gz'
+  'integration-2d8e8592f0ec6a14a81357aabeef39561ee24d3e.tar.gz'
   'neatvnc-458553ce35b8828f9973b20f36fe3fc8460b45ab.tar.gz'
-  'wayvnc-9f754d0b5b3886ac124013bcdd113bc76aaba24e.tar.gz'
+  'wayvnc-9cd2a67369993b100488e704712d596af29302d4.tar.gz'
   'wayvnc-private-rpath.patch'
   'sources.json'
   'README-PACKAGE.md'
@@ -32,16 +32,16 @@ source=(
   'THIRD-PARTY-NOTICES'
 )
 sha256sums=(
-  'e87dd5528f6995e543105b5d201560936e08822351c1b1184ed0534d3e2faa63'
+  'c1ae8c80e8c9419f6f120dd2d55a91a1483d0ad0557c62aca2c906025befff4c'
   'adeaa1d9a9a7baee686b9ab28c526f8faff7aaa5a472ce21102c229f30aefc1b'
-  'e301ac074143cfdf76fbaad39721d1958024487d06a34fa818f0a316d360ac6d'
+  '82d16dcfad7b008ba48e0270309d7fada1785ec9938855b2b74898d036844420'
   '8c3e05e3f257cee878a520d9631c5d2c6e1baa330b50a889a6a5fc2765bbbc14'
-  'cc2f50bd03e04878c20da876fc23de4708914ec92eb5d12636348a0b31406529'
-  'e9727b96d9d18fe536b99172d8fda7253656fa79e675c75938ea79b9057812d1'
+  'c63c5e67c83f52500aac88affba3d5ae12a7befd01e6bb9573e2d144ef61d0db'
+  '4fa3c039f093d498e353bf61e0c2cfed2f420d219d73c017de29bf874c968e74'
   '66a6c36ebd2c908037f1184d8d0ca9915496d19c29c397293df0c69259834fed'
   '0cd39a006c67c5f41d995607eb1ab9a5767c6e5791614083d23882805c458763'
 )
-export SOURCE_DATE_EPOCH=1789659586
+export SOURCE_DATE_EPOCH=1789663343
 
 prepare() {
   patch --directory="$srcdir/wayvnc" --strip=1 --input="$srcdir/wayvnc-private-rpath.patch"

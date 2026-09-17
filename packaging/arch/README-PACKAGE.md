@@ -1,8 +1,8 @@
 # Mac Native Screenshare developer package
 
-Version 0.1.0alpha2-6 is an experimental add-on for x86-64 Omarchy 4.0 / Hyprland 0.56. Setup and service lifecycle are implemented. A second-host Mac connection at scale 2 has been reported; full acceptance remains pending.
+Version 0.1.0alpha2-7 is an experimental add-on for x86-64 Omarchy 4.0 / Hyprland 0.56. Setup and service lifecycle are implemented. A second-host Mac connection at scale 2 has been reported; full acceptance remains pending.
 
-Revision 6 follows system keyboard layout changes, accepts composed Mac accents, and provides terminal Option+Up by default. Live keyboard changes wait for key release and do not disconnect the viewer. No personal keyboard overrides are required.
+Revision 7 follows system keyboard layout changes, accepts composed Mac accents, and provides terminal Option+Up by default. Live keyboard changes wait for key release and do not disconnect the viewer. An idle virtual keyboard is refreshed on a layout change so active desktop input methods receive the new map. No personal keyboard overrides are required.
 
 Revision 5 adds `reset-password [PASSWORD]`: supply a 1–8-character printable ASCII password while sharing is stopped, or omit the argument to generate one. Existing settings and passwords survive the upgrade.
 
@@ -15,8 +15,8 @@ The package contains private modified WayVNC/NeatVNC components, a `mac-native-s
 On a supported host with the declared dependencies available:
 
 ```bash
-pacman -Qip ./mac-native-screenshare-0.1.0alpha2-6-x86_64.pkg.tar.zst
-sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-6-x86_64.pkg.tar.zst
+pacman -Qip ./mac-native-screenshare-0.1.0alpha2-7-x86_64.pkg.tar.zst
+sudo pacman -U ./mac-native-screenshare-0.1.0alpha2-7-x86_64.pkg.tar.zst
 mac-native-screenshare setup
 mac-native-screenshare password
 mac-native-screenshare start
