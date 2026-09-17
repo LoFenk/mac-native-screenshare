@@ -7,8 +7,11 @@ local function present(path)
   return false
 end
 function M.keyboard(api, root)
+  -- Local accent-layout Option-Up remains useful when sharing is stopped.
+  local shortcuts = dofile(root .. "/mac-shortcuts.lua")
+  shortcuts.install_local(api)
   if runtime and present(runtime .. "/mac-native-screenshare/keyboard") then
-    dofile(root .. "/mac-shortcuts.lua").install(api)
+    shortcuts.install(api)
   end
 end
 function M.display(api)

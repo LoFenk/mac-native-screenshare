@@ -126,5 +126,29 @@ assert(sent[1].window == agent and sent[2].window == agent, "Release must target
 focused, option = agent, true
 assert(question().ok and #sent == 3, "The next shortcut must work after release")
 timers[2]()
+-- A normal terminal must receive the same chord as a specially labeled agent.
+for _, class in ipairs({ "foot", "Alacritty", "kitty", "com.mitchellh.ghostty" }) do
+  focused, option = { class = class }, true
+  local count = #sent
+  assert(question().ok and #sent == count + 1, class)
+  timers[#timers]()
+  assert(#sent == count + 2 and sent[#sent].window == focused)
+end
+local local_binding = module.install_local(api)
+assert(module.install_local(api) == local_binding, "Local binding is idempotent")
+assert(local_binding.keys == "MOD5 + UP")
+assert(not local_binding.options.device.inclusive)
+local local_question = module.question_shortcut({
+  get_active_window = function() return focused end,
+  is_key_down = function() error("Local Mod5 chord does not depend on remote Meta") end,
+  dsp = { send_key_state = function(args) return args end },
+  dispatch = function(args) sent[#sent + 1] = args end,
+  timer = function(callback) timers[#timers + 1] = callback end,
+}, true)
+focused, option = { class = "foot" }, false
+assert(local_question().ok)
+timers[#timers]()
+focused = { class = "browser" }
+assert(not local_question().ok)
 print("Mac shortcut tests passed: modifier pairs, scope, preserved actions/flags, no duplicate execution, isolated unbind, idempotence, pointer exclusions, partial-failure cleanup.")
 print("Option-Up tests passed: remote device scope, plain Up passthrough, application scope, paired events, no overlapping presses, release after focus change.")

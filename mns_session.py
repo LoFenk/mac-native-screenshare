@@ -11,10 +11,11 @@ import time
 
 from mns_common import Error, Paths, ROOT, atomic_write, lock, notify, password, read_private, resolve_network, run, settings, write_json
 from mns_desktop import Desktop, verify_hooks
+from mns_keyboard import Keyboard
 from mns_relay import Relay, reserve
 from probe import legacy_probe
 
-GENERATED = ('wayvnc.conf', 'vnc.sock', 'control', 'endpoint.json', 'discovery-ready', 'ready.json')
+GENERATED = ('wayvnc.conf', 'vnc.sock', 'control', 'endpoint.json', 'discovery-ready', 'ready.json', 'keyboard.json')
 
 
 def session_environment(paths):
@@ -94,9 +95,11 @@ async def serve(paths):
         before = desktop.begin(config)
         backend = paths.runtime / 'vnc.sock'
         control = paths.runtime / 'control'
+        keyboard = Keyboard(paths, desktop)
         atomic_write(paths.runtime / 'wayvnc.conf', '\n'.join([
             'address=unix:' + str(backend), 'enable_auth=true', 'enable_pam=false',
-            'password=' + secret, 'relax_encryption=true', 'allow_broken_crypto=true', '']))
+            'password=' + secret, 'relax_encryption=true', 'allow_broken_crypto=true',
+            *keyboard.config_lines(), '']))
         environment = dict(os.environ, NVNC_APPLE_CLIPBOARD='1', LD_LIBRARY_PATH=str(ROOT / 'lib'))
         environment.pop('NOTIFY_SOCKET', None)
         server = await asyncio.create_subprocess_exec(str(ROOT / 'bin/wayvnc'), '-r', '-R',
@@ -105,6 +108,7 @@ async def serve(paths):
         def server_ready():
             return control.is_socket() and run(ROOT / 'bin/wayvncctl', '-S', control, 'version', check=False, timeout=2).returncode == 0
         await wait_until(server_ready, server, stopping, 10)
+        keyboard.record()
         # Verify password enforcement before any public peer can reach the backend.
         await asyncio.to_thread(legacy_probe, str(backend), secret.encode(), True)
         del secret
@@ -130,6 +134,7 @@ async def serve(paths):
                 resolve_network(config, address)
                 verify_hooks(paths)
                 desktop.guard(config)
+                keyboard.sync()
             except (Error, OSError, ValueError, subprocess.SubprocessError) as error:
                 print(str(error), flush=True)
                 return False

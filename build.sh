@@ -48,6 +48,7 @@ LD_LIBRARY_PATH="$build_root/neatvnc${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
   meson test -C "$build_root/wayvnc" --print-errorlogs
 
 "$integration_python" "$source_root/test.py"
+"$integration_python" "$source_root/test-keyboard.py"
 lua "$source_root/test-mac-shortcuts.lua" "$source_root/mac-shortcuts.lua"
 bash -n "$source_root/run.sh" "$source_root/mac-shortcuts.sh" "$source_root/build.sh"
 

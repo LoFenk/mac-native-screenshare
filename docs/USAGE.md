@@ -84,6 +84,16 @@ For the instructions alone, including before initial setup, run `mac-native-scre
 
 If text is also too large locally, follow the guide's normal Omarchy scaling instructions with sharing stopped. If only the Mac view needs adjustment, first consider its View → scaling controls; these fit the existing image without changing Linux resolution. Temporary sizing provides another desktop size when that is useful. More pixels can provide more workspace when fitted to the Mac, but do not guarantee sharper text; scaling, aspect ratio, and client quality settings also matter.
 
+## Keyboard layouts, accents, and Option+Up
+
+Revision 6 follows the selected physical keyboard's system layout and variant automatically, including switching between configured languages and reloading the keyboard configuration. The remote lookup map keeps that layout first and includes completed Western European accented letters. For example, Mac Option+E then E sends `é`; it no longer fails because the Linux Mac layout contains only the dead accent.
+
+Changes reach existing connections on the next one-second state check, without disconnecting or restarting screen sharing. If a remote key is held, the update waits until release. Invalid or temporarily unavailable layouts retain the last working map and produce a journal message. Virtual keyboards and input-method devices are excluded from system-layout selection to prevent feedback. With several physical keyboards, the active physical keyboard is preferred; while virtual input is active, a regular physical keyboard is used. With no physical keyboard, the configured global layout is used.
+
+Mac Screen Sharing sends characters and semantic modifiers, so the Mac input source still determines the text it sends. The package follows the system's language and variant for lookup; it does not change the Mac input source or copy physical Alt/Option modifier remappings onto incoming Command keys. It preserves both Command keys and augments the lookup with Western European accents; this is not a promise that every Unicode character or custom XKB rule set is supported.
+
+Option+Up works in regular Foot, Omarchy agent, Alacritty, Kitty, and Ghostty terminals. The same hook handles local Alt/Option+Up when an accent layout represents Option as Mod5. Plain Up and input to other applications are unchanged. No personal `bindings.lua` snippet, service environment override, or manual keyboard map is needed after setup. Existing hand-written workarounds are not deleted automatically; remove duplicate overrides when adopting the package default.
+
 ## Virtual sizing and keyboard behavior
 
 The original explicit commands remain available. Stop sharing before using setup to change its settings:
@@ -96,7 +106,7 @@ mac-native-screenshare start
 
 Setup reuses the selected network/display and preserves the password. Use `setup --physical` to return to physical capture. `--port` and `--name` can also update stopped settings. Supported virtual dimensions are 320×200 through 8192×8192; practical performance limits still need client testing.
 
-The supervisor stages one reserved `MAC-NATIVE-SHARE` output, switches capture, and mirrors the physical panel to it. A runtime tail hook reapplies the virtual rules when Hyprland reloads. On stop, the panel is unmirrored, the owned virtual output is removed, and the current user configuration is reloaded; workspaces migrate back through the compositor. The keyboard hook translates the tested remote keyboard names while sharing is active. It leaves physical bindings and pointer bindings with their original behavior. Both hooks are inactive when their runtime markers are absent.
+The supervisor stages one reserved `MAC-NATIVE-SHARE` output, switches capture, and mirrors the physical panel to it. A runtime tail hook reapplies the virtual rules when Hyprland reloads. On stop, the panel is unmirrored, the owned virtual output is removed, and the current user configuration is reloaded; workspaces migrate back through the compositor. The keyboard hook translates remote Mac shortcuts while sharing is active. Pointer bindings keep their original behavior. Remote shortcut translation and display rules are inactive when their runtime markers are absent. The local accent-layout Option+Up correction remains active after setup, including while sharing is stopped, until the add-on hooks are removed.
 
 If the physical display disappears during virtual sharing, access stops and recovery retains the virtual output instead of removing the only remaining desktop. Reconnect the physical display and run `recover`. The journal stays available if restoration fails. Removal refuses edited managed blocks rather than deleting text it can no longer identify; inspect the two marked blocks and retry after resolving the edits.
 

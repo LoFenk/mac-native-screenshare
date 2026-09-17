@@ -45,6 +45,10 @@ class SupervisorTests(unittest.IsolatedAsyncioTestCase):
             class Desktop:
                 def __init__(self, _):
                     pass
+                def query(self, kind):
+                    if kind == 'devices':
+                        return {'keyboards': [{'name': 'physical-keyboard', 'layout': 'us', 'variant': 'mac', 'active_layout_index': 0}]}
+                    raise AssertionError(kind)
                 def begin(self, _):
                     events.append('begin')
                     return {'virtual': None}
@@ -110,6 +114,31 @@ class SupervisorTests(unittest.IsolatedAsyncioTestCase):
             self.assertFalse((paths.runtime / 'wayvnc.conf').exists())
             with self.assertRaises(OSError):
                 await asyncio.open_connection('127.0.0.1', port)
+
+    async def test_keyboard_control_validates_maps_without_attaching_to_desktop(self):
+        with tempfile.TemporaryDirectory(prefix='mns-keyboard-control-') as directory:
+            root = Path(directory)
+            config, control = root / 'wayvnc.conf', root / 'control'
+            config.write_text('address=unix:' + str(root / 'vnc.sock') + '\nxkb_options=lv3:ralt_alt\n')
+            child = await asyncio.create_subprocess_exec(str(RUNTIME / 'bin/wayvnc'), '-D',
+                        '-C', str(config), '-S', str(control), '-L', 'quiet',
+                        env=dict(os.environ, LD_LIBRARY_PATH=str(RUNTIME / 'lib')))
+            try:
+                for _ in range(50):
+                    if control.is_socket(): break
+                    await asyncio.sleep(.05)
+                self.assertTrue(control.is_socket())
+                def call(*args):
+                    return common.run(RUNTIME / 'bin/wayvncctl', '-S', control,
+                                      'keyboard-set', *args, check=False)
+                for args in [('us,us', 'mac,altgr-weur'), ('fr,us', 'oss,altgr-weur'), ('de', '')]:
+                    self.assertEqual((await asyncio.to_thread(call, *args)).returncode, 0)
+                for args in [('bad_nonexistent_layout', ''), ('us', 'bad_nonexistent_variant'), ('u' * 256, ''), ('us',)]:
+                    self.assertNotEqual((await asyncio.to_thread(call, *args)).returncode, 0)
+                self.assertEqual((await asyncio.to_thread(call, 'us', '')).returncode, 0)
+                self.assertIsNone(child.returncode)
+            finally:
+                await session.terminate(child)
 
     async def test_network_loss_revokes_real_client_before_restore(self):
         await self.exercise('network')

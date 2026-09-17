@@ -1,5 +1,5 @@
 -- Prototype: translate Apple Screen Sharing keyboard shortcuts at registration.
--- Application input is unchanged except for Option-Up in the agent terminal.
+-- Application input is unchanged except for Option-Up in terminal windows.
 local M = {}
 -- Hyprland suffixes the device name when normal sharing and the clipboard
 -- trial are connected together. Both use the same Mac shortcut translation.
@@ -30,13 +30,15 @@ local function copy(options)
   return result
 end
 
-function M.question_shortcut(api)
+function M.question_shortcut(api, local_keyboard)
   local sending = false
   return function()
     local window = api.get_active_window()
     -- Apple's Option arrives as XKB <META> (205), with no active modifier.
     -- Let ordinary Up and other applications receive their original input.
-    if not window or window.class ~= "org.omarchy.agent" or not api.is_key_down(205) then
+    local terminals = { ["org.omarchy.agent"] = true, foot = true,
+      Alacritty = true, kitty = true, ["com.mitchellh.ghostty"] = true }
+    if not window or not terminals[window.class] or (not local_keyboard and not api.is_key_down(205)) then
       return { ok = false }
     end
     if sending then return { ok = true } end
@@ -51,6 +53,16 @@ function M.question_shortcut(api)
     end, { timeout = 50, type = "oneshot" })
     return { ok = true }
   end
+end
+
+function M.install_local(api)
+  if api.omarchy_mac_local_option_up then return api.omarchy_mac_local_option_up end
+  api.omarchy_mac_local_option_up = api.bind("MOD5 + UP", M.question_shortcut(api, true), {
+    description = "Option-Up: terminal questions with accent layouts",
+    auto_consuming = true,
+    device = { inclusive = false, list = remote_keyboards },
+  })
+  return api.omarchy_mac_local_option_up
 end
 
 function M.install(api)
@@ -109,7 +121,7 @@ function M.install(api)
   end
 
   state.question_binding = original_bind("UP", M.question_shortcut(api), {
-    description = "Mac sharing: Option-Up for agent questions",
+    description = "Mac sharing: Option-Up for terminal questions",
     auto_consuming = true,
     device = { inclusive = true, list = remote_keyboards },
   })
